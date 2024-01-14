@@ -15,7 +15,7 @@ int bt::cts_init()
   int err = bt_cts_client_init(&cts_c);
   if (err)
   {
-    printk("CTS client init failed (err %d)\n", err);
+    LOG_DBG("CTS client init failed (err %d)", err);
     return err;
   }
 

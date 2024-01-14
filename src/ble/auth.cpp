@@ -3,7 +3,7 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/bluetooth/conn.h>
 
-LOG_MODULE_REGISTER(bt_auth, CONFIG_APP_LOG_LEVEL);
+LOG_MODULE_REGISTER(bt_auth, CONFIG_NRF_TEST_LOG_LEVEL);
 
 // static bool pairing_enabled;
 
@@ -32,7 +32,7 @@ static void passkey_display(bt_conn *conn, unsigned int passkey)
 
   bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
-  printk("Passkey for %s: %06u\n", addr, passkey);
+  LOG_DBG("Passkey for %s: %06u", addr, passkey);
 }
 
 void auth_cancel(bt_conn *conn)
@@ -41,24 +41,24 @@ void auth_cancel(bt_conn *conn)
 
   bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
-  printk("Pairing cancelled: %s\n", addr);
+  LOG_DBG("Pairing cancelled: %s", addr);
 }
 
 void pairing_deny(bt_conn *conn)
 {
-  printk("Pairing deny\n");
+  LOG_DBG("Pairing deny");
   bt_conn_auth_cancel(conn);
 }
 
 void pairing_accept(bt_conn *conn)
 {
-  printk("Pairing accept\n");
+  LOG_DBG("Pairing accept");
   bt_conn_auth_pairing_confirm(conn);
 }
 
 void pairing_complete(bt_conn *conn, bool bonded)
 {
-  printk("Pairing complete\n");
+  LOG_DBG("Pairing complete");
   bt_conn_info info;
   char addr[BT_ADDR_LE_STR_LEN];
 
@@ -87,7 +87,7 @@ void pairing_failed(struct bt_conn *conn, enum bt_security_err reason)
   // {
   //   zsw_popup_show("Pairing Failed", "Address:", NULL, 5, false);
   // }
-  printk("Pairing Failed (%d). Disconnecting.\n", reason);
+  LOG_DBG("Pairing Failed (%d). Disconnecting.", reason);
   bt_conn_disconnect(conn, BT_HCI_ERR_AUTH_FAIL);
 }
 
@@ -98,14 +98,14 @@ int bt::auth_init()
   err = bt_conn_auth_cb_register(&auth_cb_display);
   if (err)
   {
-    printk("Failed to register authorization callbacks.\n");
+    LOG_DBG("Failed to register authorization callbacks.");
     return err;
   }
 
   err = bt_conn_auth_info_cb_register(&auth_cb_info);
   if (err)
   {
-    printk("Failed to register authorization info callbacks.\n");
+    LOG_DBG("Failed to register authorization info callbacks.");
     return err;
   }
   return 0;
@@ -114,17 +114,16 @@ void bt::auth_set_pairable(bool pairable)
 {
   if (pairable)
   {
-    printk("Enable Pairable\n");
+    LOG_DBG("Enable Pairable");
     auth_cb_display.pairing_confirm = pairing_accept;
     auth_cb_display.passkey_display = passkey_display;
     bt_conn_auth_cb_register(&auth_cb_display);
   }
   else
   {
-    printk("Disable Pairable\n");
+    LOG_DBG("Disable Pairable");
     auth_cb_display.pairing_confirm = pairing_deny;
     auth_cb_display.passkey_display = nullptr;
     bt_conn_auth_cb_register(&auth_cb_display);
   }
-  // pairing_enabled = pairable;
 }

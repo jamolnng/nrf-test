@@ -2,11 +2,13 @@
 #include "ble/auth.hpp"
 
 #include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/logging/log_ctrl.h>
 #include <zephyr/bluetooth/bluetooth.h>
-#include <zephyr/input/input.h>
 
 #include <dk_buttons_and_leds.h>
-#include <zephyr/dt-bindings/input/input-event-codes.h>
+
+LOG_MODULE_REGISTER(main, CONFIG_NRF_TEST_LOG_LEVEL);
 
 void init(k_work *item);
 int main();
@@ -24,9 +26,8 @@ static void button_changed(uint32_t button_state, uint32_t has_changed)
   {
     pairable = !pairable;
     bt::auth_set_pairable(pairable);
-    printk("setting pairable: %d\n", pairable);
+    LOG_DBG("setting pairable: %d", pairable);
   }
-  printk("test\n");
 }
 
 static int init_button(void)
@@ -36,7 +37,7 @@ static int init_button(void)
   err = dk_buttons_init(button_changed);
   if (err)
   {
-    printk("Cannot init buttons (err: %d)\n", err);
+    LOG_DBG("Cannot init buttons (err: %d)", err);
   }
 
   return err;

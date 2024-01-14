@@ -8,10 +8,12 @@
 #include <zephyr/settings/settings.h>
 #include <zephyr/logging/log.h>
 
+LOG_MODULE_REGISTER(bt, CONFIG_NRF_TEST_LOG_LEVEL);
+
 #define BLE_UUID_TRANSPORT_VAL \
   BT_UUID_128_ENCODE(0x40495bc0, 0xb302, 0x11ee, 0x9ec1, 0x0800200c9a66)
 
-LOG_MODULE_REGISTER(bt, CONFIG_APP_LOG_LEVEL);
+// LOG_MODULE_REGISTER(bt, CONFIG_APP_LOG_LEVEL);
 
 #define DEVICE_NAME CONFIG_BT_DEVICE_NAME
 #define DEVICE_NAME_LEN (sizeof(DEVICE_NAME) - 1)
@@ -35,17 +37,17 @@ static void connected(struct bt_conn *conn, uint8_t err)
 {
   if (err)
   {
-    printk("Connection failed (err 0x%02x)\n", err);
+    LOG_DBG("Connection failed (err 0x%02x)", err);
   }
   else
   {
-    printk("Connected\n");
+    LOG_DBG("Connected");
   }
 }
 
 static void disconnected(struct bt_conn *conn, uint8_t reason)
 {
-  printk("Disconnected (reason 0x%02x)\n", reason);
+  LOG_DBG("Disconnected (reason 0x%02x)", reason);
 }
 
 static void security_changed(struct bt_conn *conn, bt_security_t level, enum bt_security_err err)
@@ -56,13 +58,13 @@ static void security_changed(struct bt_conn *conn, bt_security_t level, enum bt_
 
   if (!err)
   {
-    printk("Security changed: %s level %u\n", addr, level);
+    LOG_DBG("Security changed: %s level %u", addr, level);
 
     // enable_notifications();
   }
   else
   {
-    printk("Security failed: %s level %u err %d\n", addr, level, err);
+    LOG_DBG("Security failed: %s level %u err %d", addr, level, err);
   }
 }
 
@@ -82,14 +84,14 @@ int bt::bt_init()
 #endif
   if (err)
   {
-    printk("Failed to enable Bluetooth, err: %d\n", err);
+    LOG_DBG("Failed to enable Bluetooth, err: %d", err);
     return err;
   }
 
   err = bt::auth_init();
   if (err)
   {
-    printk("Failed to auth, err: %d\n", err);
+    LOG_DBG("Failed to auth, err: %d", err);
     return err;
   }
 
@@ -97,7 +99,7 @@ int bt::bt_init()
   err = bt_le_adv_start(&param, ad, ARRAY_SIZE(ad), NULL, 0);
   if (err)
   {
-    printk("Advertising failed to start (err %d)\n", err);
+    LOG_DBG("Advertising failed to start (err %d)", err);
     return err;
   }
 
