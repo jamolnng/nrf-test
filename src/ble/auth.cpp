@@ -1,0 +1,130 @@
+#include "ble/auth.hpp"
+
+#include <zephyr/logging/log.h>
+#include <zephyr/bluetooth/conn.h>
+
+LOG_MODULE_REGISTER(bt_auth, CONFIG_APP_LOG_LEVEL);
+
+// static bool pairing_enabled;
+
+static void passkey_display(bt_conn *conn, unsigned int passkey);
+static void auth_cancel(bt_conn *conn);
+static void pairing_deny(bt_conn *conn);
+static void pairing_accept(bt_conn *conn);
+static void pairing_complete(bt_conn *conn, bool bonded);
+static void pairing_failed(bt_conn *conn, enum bt_security_err reason);
+
+static bt_conn_auth_cb auth_cb_display = {
+    .passkey_display = nullptr,
+    .passkey_entry = nullptr,
+    .cancel = auth_cancel,
+    .pairing_confirm = pairing_deny,
+};
+
+static bt_conn_auth_info_cb auth_cb_info = {
+    .pairing_complete = pairing_complete,
+    .pairing_failed = pairing_failed,
+};
+
+static void passkey_display(bt_conn *conn, unsigned int passkey)
+{
+  char addr[BT_ADDR_LE_STR_LEN];
+
+  bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
+
+  printk("Passkey for %s: %06u\n", addr, passkey);
+}
+
+void auth_cancel(bt_conn *conn)
+{
+  char addr[BT_ADDR_LE_STR_LEN];
+
+  bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
+
+  printk("Pairing cancelled: %s\n", addr);
+}
+
+void pairing_deny(bt_conn *conn)
+{
+  printk("Pairing deny\n");
+  bt_conn_auth_cancel(conn);
+}
+
+void pairing_accept(bt_conn *conn)
+{
+  printk("Pairing accept\n");
+  bt_conn_auth_pairing_confirm(conn);
+}
+
+void pairing_complete(bt_conn *conn, bool bonded)
+{
+  printk("Pairing complete\n");
+  bt_conn_info info;
+  char addr[BT_ADDR_LE_STR_LEN];
+
+  if (bt_conn_get_info(conn, &info) < 0)
+  {
+    addr[0] = '\0';
+  }
+
+  bt_addr_le_to_str(info.le.remote, addr, sizeof(addr));
+  // zsw_popup_show("Pairing successful", addr, NULL, 5, false);
+  bt::auth_set_pairable(false);
+}
+
+void pairing_failed(struct bt_conn *conn, enum bt_security_err reason)
+{
+  struct bt_conn_info info;
+  char addr[BT_ADDR_LE_STR_LEN];
+
+  if (bt_conn_get_info(conn, &info) < 0)
+  {
+    addr[0] = '\0';
+  }
+
+  bt_addr_le_to_str(info.le.remote, addr, sizeof(addr));
+  // if (pairing_enabled)
+  // {
+  //   zsw_popup_show("Pairing Failed", "Address:", NULL, 5, false);
+  // }
+  printk("Pairing Failed (%d). Disconnecting.\n", reason);
+  bt_conn_disconnect(conn, BT_HCI_ERR_AUTH_FAIL);
+}
+
+int bt::auth_init()
+{
+  int err;
+
+  err = bt_conn_auth_cb_register(&auth_cb_display);
+  if (err)
+  {
+    printk("Failed to register authorization callbacks.\n");
+    return err;
+  }
+
+  err = bt_conn_auth_info_cb_register(&auth_cb_info);
+  if (err)
+  {
+    printk("Failed to register authorization info callbacks.\n");
+    return err;
+  }
+  return 0;
+}
+void bt::auth_set_pairable(bool pairable)
+{
+  if (pairable)
+  {
+    printk("Enable Pairable\n");
+    auth_cb_display.pairing_confirm = pairing_accept;
+    auth_cb_display.passkey_display = passkey_display;
+    bt_conn_auth_cb_register(&auth_cb_display);
+  }
+  else
+  {
+    printk("Disable Pairable\n");
+    auth_cb_display.pairing_confirm = pairing_deny;
+    auth_cb_display.passkey_display = nullptr;
+    bt_conn_auth_cb_register(&auth_cb_display);
+  }
+  // pairing_enabled = pairable;
+}
