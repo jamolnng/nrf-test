@@ -1,6 +1,7 @@
 #include "ble/bt.hpp"
 #include "ble/auth.hpp"
 #include "ble/cts.hpp"
+#include "ble/gatt_dm.hpp"
 
 #include <zephyr/bluetooth/bluetooth.h>
 #include <zephyr/bluetooth/conn.h>
@@ -13,7 +14,7 @@
 
 LOG_MODULE_REGISTER(bt, CONFIG_NRF_TEST_LOG_LEVEL);
 
-static bt_conn *current_conn;
+// static bt_conn *current_conn;
 
 struct bond_check
 {
@@ -71,7 +72,7 @@ static void connected(bt_conn *conn, uint8_t err)
     LOG_ERR("Connection failed (err 0x%02x)", err);
     return;
   }
-  current_conn = bt_conn_ref(conn);
+  // current_conn = bt_conn_ref(conn);
   char addr[BT_ADDR_LE_STR_LEN];
   bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
   LOG_INF("Connected %s", addr);
@@ -100,8 +101,6 @@ static void connected(bt_conn *conn, uint8_t err)
       return;
     }
   }
-
-  bt::cts::connected(conn);
 }
 
 static void disconnected(bt_conn *conn, uint8_t reason)
@@ -110,11 +109,11 @@ static void disconnected(bt_conn *conn, uint8_t reason)
   bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
   LOG_INF("Disconnected: %s (reason %u)", addr, reason);
 
-  if (current_conn)
-  {
-    bt_conn_unref(current_conn);
-    current_conn = NULL;
-  }
+  // if (current_conn)
+  // {
+  //   bt_conn_unref(current_conn);
+  //   current_conn = NULL;
+  // }
 }
 
 static void security_changed(bt_conn *conn, bt_security_t level, bt_security_err err)
@@ -131,7 +130,11 @@ static void security_changed(bt_conn *conn, bt_security_t level, bt_security_err
   else
   {
     LOG_DBG("Security changed: %s level %u", addr, level);
-    bt::cts::security_changed(conn, level);
+    if (level >= BT_SECURITY_L2)
+    {
+      // only start services if we have a secure connection
+      bt::gatt_dm::start(conn);
+    }
   }
 }
 

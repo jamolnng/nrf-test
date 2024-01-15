@@ -14,9 +14,9 @@ LOG_MODULE_REGISTER(main, CONFIG_NRF_TEST_LOG_LEVEL);
 
 #define RUN_STATUS_LED DK_LED1
 
-static void read_current_time_cb(struct bt_cts_client *cts_c,
-                                 struct bt_cts_current_time *current_time,
-                                 int err)
+void read_current_time_cb(struct bt_cts_client *cts_c,
+                          struct bt_cts_current_time *current_time,
+                          int err)
 {
   if (err)
   {
@@ -26,14 +26,13 @@ static void read_current_time_cb(struct bt_cts_client *cts_c,
   bt::current_time_print(current_time);
 }
 
-static void button_changed(uint32_t button_state, uint32_t has_changed)
+void button_changed(uint32_t button_state, uint32_t has_changed)
 {
   uint32_t buttons = button_state & has_changed;
 
   if (buttons & DK_BTN1_MSK)
   {
     bt::auth::set_pairable(!bt::auth::pairable());
-    LOG_DBG("Setting pairable: %d", bt::auth::pairable());
   }
 
   if (buttons & DK_BTN2_MSK)
@@ -61,7 +60,7 @@ static void button_changed(uint32_t button_state, uint32_t has_changed)
   }
 }
 
-static int init_button(void)
+int init_button(void)
 {
   int err;
 

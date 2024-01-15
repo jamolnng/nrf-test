@@ -7,6 +7,7 @@ target_sources(app PRIVATE
   src/ble/bt.cpp
   src/ble/auth.cpp
   src/ble/cts.cpp
+  src/ble/gatt_dm.cpp
   src/ble/utils.cpp
   src/main.cpp
 )
