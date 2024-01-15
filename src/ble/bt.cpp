@@ -15,6 +15,8 @@
 
 LOG_MODULE_REGISTER(bt, CONFIG_NRF_TEST_LOG_LEVEL);
 
+static uint32_t mtu_max_send_len = 0;
+
 // static bt_conn *current_conn;
 
 struct bond_check
@@ -50,6 +52,7 @@ static const bt_data ad[] = {
 };
 
 static const bt_data sd[] = {
+    BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
     BT_DATA(BT_DATA_NAME_COMPLETE, DEVICE_NAME, DEVICE_NAME_LEN),
     BT_DATA_BYTES(BT_DATA_UUID128_ALL, BLE_UUID_TRANSPORT_VAL),
 };
@@ -62,6 +65,43 @@ BT_CONN_CB_DEFINE(conn_callbacks) = {
     .disconnected = disconnected,
     .security_changed = security_changed,
 };
+
+void mtu_exchange_cb(struct bt_conn *conn, uint8_t err, struct bt_gatt_exchange_params *params);
+static struct bt_gatt_exchange_params exchange_params = {
+    .func = mtu_exchange_cb,
+};
+
+int ble_comm_get_mtu(bt_conn *conn)
+{
+  return bt_gatt_get_mtu(conn);
+}
+
+void mtu_exchange_cb(struct bt_conn *conn, uint8_t err, struct bt_gatt_exchange_params *params)
+{
+  if (!err)
+  {
+    mtu_max_send_len = bt_gatt_get_mtu(conn) - 3;
+    LOG_DBG("MTU exchange done. %d", mtu_max_send_len);
+  }
+  else
+  {
+    LOG_ERR("MTU exchange failed (err %" PRIu8 ")", err);
+  }
+}
+
+void request_mtu_exchange(bt_conn *conn)
+{
+  int err;
+  err = bt_gatt_exchange_mtu(conn, &exchange_params);
+  if (err)
+  {
+    LOG_ERR("MTU exchange failed (err %d)", err);
+  }
+  // else
+  // {
+  //   LOG_DBG("MTU exchange pending");
+  // }
+}
 
 static void check_bond(const bt_bond_info *info, void *data)
 {
@@ -86,7 +126,10 @@ static void connected(bt_conn *conn, uint8_t err)
   // current_conn = bt_conn_ref(conn);
   char addr[BT_ADDR_LE_STR_LEN];
   bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
-  LOG_INF("Connected %s", addr);
+  LOG_DBG("Connected %s", addr);
+  mtu_max_send_len = bt_gatt_get_mtu(conn) - 3;
+  LOG_DBG("Initial MTU: %d", mtu_max_send_len);
+  request_mtu_exchange(conn);
 
   if (bt::auth::pairable())
   {
@@ -118,7 +161,7 @@ static void disconnected(bt_conn *conn, uint8_t reason)
 {
   char addr[BT_ADDR_LE_STR_LEN];
   bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
-  LOG_INF("Disconnected: %s (reason %u)", addr, reason);
+  LOG_DBG("Disconnected: %s (reason %u)", addr, reason);
 
   // if (current_conn)
   // {
@@ -242,4 +285,9 @@ int bt::init()
     return err;
   }
   return 0;
+}
+
+uint32_t bt::max_send_len()
+{
+  return mtu_max_send_len;
 }
