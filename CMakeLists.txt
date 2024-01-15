@@ -6,7 +6,7 @@ project(nrf-test VERSION "0.0.0" LANGUAGES C CXX)
 target_sources(app PRIVATE
   src/ble/bt.cpp
   src/ble/auth.cpp
-  src/ble/cts_client.cpp
+  src/ble/cts.cpp
   src/ble/utils.cpp
   src/main.cpp
 )

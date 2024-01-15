@@ -1,32 +1,63 @@
 #include "ble/bt.hpp"
 #include "ble/auth.hpp"
+#include "ble/cts.hpp"
+#include "ble/utils.hpp"
 
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
-#include <zephyr/logging/log_ctrl.h>
-#include <zephyr/bluetooth/bluetooth.h>
 
 #include <dk_buttons_and_leds.h>
+#include <zephyr/bluetooth/conn.h>
+#include <zephyr/sys/reboot.h>
 
 LOG_MODULE_REGISTER(main, CONFIG_NRF_TEST_LOG_LEVEL);
 
-void init(k_work *item);
-int main();
+#define RUN_STATUS_LED DK_LED1
 
-static bool pairable = false;
-
-K_WORK_DEFINE(init_work, init);
+static void read_current_time_cb(struct bt_cts_client *cts_c,
+                                 struct bt_cts_current_time *current_time,
+                                 int err)
+{
+  if (err)
+  {
+    LOG_ERR("Cannot read Current Time: error: %d", err);
+    return;
+  }
+  bt::current_time_print(current_time);
+}
 
 static void button_changed(uint32_t button_state, uint32_t has_changed)
 {
   uint32_t buttons = button_state & has_changed;
-  int err;
 
   if (buttons & DK_BTN1_MSK)
   {
-    pairable = !pairable;
-    bt::auth_set_pairable(pairable);
-    LOG_DBG("setting pairable: %d", pairable);
+    bt::auth::set_pairable(!bt::auth::pairable());
+    LOG_DBG("Setting pairable: %d", bt::auth::pairable());
+  }
+
+  if (buttons & DK_BTN2_MSK)
+  {
+    bt::cts::read_current_time(read_current_time_cb);
+  }
+
+  if (buttons & DK_BTN3_MSK)
+  {
+    bt_le_adv_stop();
+    bt_unpair(BT_ID_DEFAULT, BT_ADDR_LE_ANY);
+    bt_disable();
+    int err = bt_le_filter_accept_list_clear();
+    LOG_DBG("btn3 (%d)", err);
+    k_sleep(K_MSEC(4000));
+    sys_reboot(SYS_REBOOT_WARM);
+  }
+
+  if (buttons & DK_BTN4_MSK)
+  {
+    bt_disable();
+    LOG_DBG("btn4");
+    k_sleep(K_MSEC(4000));
+    sys_reboot(SYS_REBOOT_WARM);
   }
 }
 
@@ -43,19 +74,13 @@ static int init_button(void)
   return err;
 }
 
-#define RUN_STATUS_LED DK_LED1
-
-void init(k_work *item)
-{
-}
-
 int main()
 {
   init_button();
   dk_leds_init();
 
-  bt::bt_init();
-  bt::auth_set_pairable(false);
+  bt::init();
+  bt::auth::set_pairable(false);
 
   int blink_status = 0;
   while (true)

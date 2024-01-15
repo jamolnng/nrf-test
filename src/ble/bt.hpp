@@ -1,4 +1,4 @@
 namespace bt
 {
-  int bt_init();
+  int init();
 }

@@ -2,17 +2,32 @@
 
 #include <zephyr/logging/log.h>
 
-LOG_MODULE_REGISTER(ble_utils, LOG_LEVEL_WRN);
+LOG_MODULE_REGISTER(bt_utils, CONFIG_NRF_TEST_LOG_LEVEL);
 
-static const char *day_of_week[] = {"Unknown", "Monday", "Tuesday",
-                                    "Wednesday", "Thursday", "Friday",
-                                    "Saturday", "Sunday"};
+static const char *day_of_week[] = {
+    "Unknown",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday"};
 
-static const char *month_of_year[] = {"Unknown", "January", "February",
-                                      "March", "April", "May",
-                                      "June", "July", "August",
-                                      "September", "October", "November",
-                                      "December"};
+static const char *month_of_year[] = {
+    "Unknown",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December"};
 
 void bt::current_time_print(bt_cts_current_time *current_time)
 {
