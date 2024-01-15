@@ -167,6 +167,8 @@ static void security_changed(bt_conn *conn, bt_security_t level, bt_security_err
         LOG_ERR("Failed to enable ANCS Client, err: %d", err);
       }
 #endif
+      // only start services if we have a secure connection
+      bt::gatt_dm::start(conn);
 
 #ifdef CONFIG_BT_NUS
       err = bt::nus::init();
@@ -175,9 +177,6 @@ static void security_changed(bt_conn *conn, bt_security_t level, bt_security_err
         LOG_ERR("Failed to enable NUS, err: %d", err);
       }
 #endif
-
-      // only start services if we have a secure connection
-      bt::gatt_dm::start(conn);
     }
   }
 }

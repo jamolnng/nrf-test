@@ -126,7 +126,8 @@ void bt::gatt_dm::start(bt_conn *conn)
 {
   LOG_DBG("Starting GATT discovery manager");
   int err = bt_gatt_dm_start(conn, NULL, &discover_all_cb, NULL);
-  if (err)
+  // if err == -EALREADY then we are already running the gatt dm
+  if (err && err != -EALREADY)
   {
     LOG_ERR("Failed to start GATT discovery (err %d)", err);
   }
