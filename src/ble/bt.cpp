@@ -101,7 +101,6 @@ static void connected(bt_conn *conn, uint8_t err)
     }
   }
 
-  bt_le_adv_stop();
   bt::cts::connected(conn);
 }
 
