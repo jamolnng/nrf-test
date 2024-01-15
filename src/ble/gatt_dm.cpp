@@ -1,5 +1,6 @@
 #include "ble/gatt_dm.hpp"
 #include "ble/cts.hpp"
+#include "ble/nus.hpp"
 
 #include <bluetooth/gatt_dm.h>
 
@@ -25,6 +26,9 @@ bool found[] = {
 #ifdef CONFIG_BT_AMS_CLIENT
     false,
 #endif
+#ifdef CONFIG_BT_ANCS_CLIENT
+    false,
+#endif
 };
 
 const char *service_names[] = {
@@ -34,10 +38,15 @@ const char *service_names[] = {
 #ifdef CONFIG_BT_AMS_CLIENT
     "AMS Client",
 #endif
+#ifdef CONFIG_BT_ANCS_CLIENT
+    "ANCS Client",
+#endif
 };
 
 void discover_all_completed_cb(bt_gatt_dm *dm, void *ctx)
 {
+  bt_gatt_dm_data_print(dm);
+
   const struct bt_gatt_dm_attr *gatt_service_attr =
       bt_gatt_dm_service_get(dm);
   const struct bt_gatt_service_val *gatt_service =
@@ -49,7 +58,7 @@ void discover_all_completed_cb(bt_gatt_dm *dm, void *ctx)
     bt_uuid_16 param = BT_UUID_INIT_16(BT_UUID_CTS_VAL);
     if (bt_uuid_cmp(gatt_service->uuid, reinterpret_cast<bt_uuid *>(&param)) == 0)
     {
-      found[bt::gatt_dm::Service::CTS_Client] = true;
+      found[bt::gatt_dm::CTS_Client] = true;
       LOG_DBG("%s found", service_names[bt::gatt_dm::CTS_Client]);
       bt::cts::discover_completed(dm, ctx);
       handled = true;
@@ -61,9 +70,21 @@ void discover_all_completed_cb(bt_gatt_dm *dm, void *ctx)
     bt_uuid_128 param = BT_UUID_INIT_128(BT_UUID_AMS_VAL);
     if (bt_uuid_cmp(gatt_service->uuid, reinterpret_cast<bt_uuid *>(&param)) == 0)
     {
-      found[bt::gatt_dm::Service::AMS_Client] = true;
+      found[bt::gatt_dm::AMS_Client] = true;
       LOG_DBG("%s found", service_names[bt::gatt_dm::AMS_Client]);
-      // bt::ams::discover_completed(dm, ctx);
+      bt::ams::discover_completed(dm, ctx);
+      handled = true;
+    }
+  }
+#endif
+#ifdef CONFIG_BT_ANCS_CLIENT
+  {
+    bt_uuid_128 param = BT_UUID_INIT_128(BT_UUID_AMS_VAL);
+    if (bt_uuid_cmp(gatt_service->uuid, reinterpret_cast<bt_uuid *>(&param)) == 0)
+    {
+      found[bt::gatt_dm::ANCS_Client] = true;
+      LOG_DBG("%s found", service_names[bt::gatt_dm::ANCS_Client]);
+      bt::ancs::discover_completed(dm, ctx);
       handled = true;
     }
   }
@@ -77,7 +98,6 @@ void discover_all_completed_cb(bt_gatt_dm *dm, void *ctx)
     // LOG_ERR("Attribute count: %d\n", attr_count);
   }
 
-  bt_gatt_dm_data_print(dm);
   bt_gatt_dm_data_release(dm);
 
   bt_gatt_dm_continue(dm, NULL);

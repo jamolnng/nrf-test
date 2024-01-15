@@ -5,9 +5,12 @@ project(nrf-test VERSION "0.0.0" LANGUAGES C CXX)
 
 target_sources(app PRIVATE
   src/ble/bt.cpp
+#   src/ble/ams.cpp
+#   src/ble/ancs.cpp
   src/ble/auth.cpp
   src/ble/cts.cpp
   src/ble/gatt_dm.cpp
+  src/ble/nus.cpp
   src/ble/utils.cpp
   src/main.cpp
 )

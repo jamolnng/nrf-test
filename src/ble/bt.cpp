@@ -2,6 +2,7 @@
 #include "ble/auth.hpp"
 #include "ble/cts.hpp"
 #include "ble/gatt_dm.hpp"
+#include "ble/nus.hpp"
 
 #include <zephyr/bluetooth/bluetooth.h>
 #include <zephyr/bluetooth/conn.h>
@@ -34,8 +35,18 @@ static const bt_data ad[] = {
     BT_DATA_BYTES(BT_DATA_GAP_APPEARANCE, BT_BYTES_LIST_LE16(BT_APPEARANCE_GENERIC_WATCH)),
     BT_DATA_BYTES(BT_DATA_UUID16_SOME,
                   BT_UUID_16_ENCODE(BT_UUID_DIS_VAL),
-                  BT_UUID_16_ENCODE(BT_UUID_CTS_VAL)),
-    // BT_DATA_BYTES(BT_DATA_SOLICIT128, BT_UUID_ANCS_VAL),
+#ifdef CONFIG_BT_CTS_CLIENT
+                  BT_UUID_16_ENCODE(BT_UUID_CTS_VAL),
+#endif
+                  ),
+    BT_DATA_BYTES(BT_DATA_SOLICIT128,
+#ifdef CONFIG_BT_AMS_CLIENT
+                  BT_UUID_AMS_VAL,
+#endif
+#ifdef CONFIG_BT_NUS
+                  BT_UUID_NUS_VAL,
+#endif
+                  ),
 };
 
 static const bt_data sd[] = {
@@ -132,6 +143,39 @@ static void security_changed(bt_conn *conn, bt_security_t level, bt_security_err
     LOG_DBG("Security changed: %s level %u", addr, level);
     if (level >= BT_SECURITY_L2)
     {
+      int err;
+#ifdef CONFIG_BT_CTS_CLIENT
+      err = bt::cts::init();
+      if (err)
+      {
+        LOG_ERR("Failed to enable CTS Client, err: %d", err);
+      }
+#endif
+
+#ifdef CONFIG_BT_AMS_CLIENT
+      err = bt::ams::init();
+      if (err)
+      {
+        LOG_ERR("Failed to enable AMS Client, err: %d", err);
+      }
+#endif
+
+#ifdef CONFIG_BT_ANCS_CLIENT
+      err = bt::ancs::init();
+      if (err)
+      {
+        LOG_ERR("Failed to enable ANCS Client, err: %d", err);
+      }
+#endif
+
+#ifdef CONFIG_BT_NUS
+      err = bt::nus::init();
+      if (err)
+      {
+        LOG_ERR("Failed to enable NUS, err: %d", err);
+      }
+#endif
+
       // only start services if we have a secure connection
       bt::gatt_dm::start(conn);
     }
@@ -198,13 +242,5 @@ int bt::init()
     LOG_ERR("Advertising failed to start (err %d)", err);
     return err;
   }
-
-  err = bt::cts::init();
-  if (err)
-  {
-    LOG_ERR("Failed to enable CTS Client, err: %d", err);
-    return err;
-  }
-
   return 0;
 }
