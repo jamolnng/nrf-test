@@ -1,9 +1,11 @@
 #include "ble/bt.hpp"
 #include "ble/auth.hpp"
 #include "ble/cts.hpp"
+#include "ble/nus.hpp"
 #include "ble/utils.hpp"
 
 #include <zephyr/kernel.h>
+#include <zephyr/input/input.h>
 #include <zephyr/logging/log.h>
 
 #include <dk_buttons_and_leds.h>
@@ -25,90 +27,93 @@ void read_current_time_cb(struct bt_cts_client *cts_c,
   }
   bt::current_time_print(current_time);
 }
+#define GB_HTTP_REQUEST "{\"t\":\"http\", \"url\":\"https://opentdb.com/api.php?amount=1&difficulty=easy&type=boolean\"} \n"
 
-void button_changed(uint32_t button_state, uint32_t has_changed)
+void run_pair(k_work *item);
+K_WORK_DELAYABLE_DEFINE(pair_work, run_pair);
+void run_pair(k_work *item)
 {
-  uint32_t buttons = button_state & has_changed;
+  bt::auth::set_pairable(!bt::auth::pairable());
+}
 
-  if (buttons & DK_BTN1_MSK)
-  {
-    bt::auth::set_pairable(!bt::auth::pairable());
-  }
+void run_time(k_work *item);
+K_WORK_DELAYABLE_DEFINE(time_work, run_time);
+void run_time(k_work *item)
+{
+  bt::cts::read_current_time(read_current_time_cb);
+  bt::nus::send(reinterpret_cast<const uint8_t *>(GB_HTTP_REQUEST), sizeof(GB_HTTP_REQUEST) - 1);
+}
 
-  if (buttons & DK_BTN2_MSK)
-  {
-    bt::cts::read_current_time(read_current_time_cb);
-  }
+void run_unregister(k_work *item);
+K_WORK_DELAYABLE_DEFINE(unregister_work, run_unregister);
+void run_unregister(k_work *item)
+{
+  bt_le_adv_stop();
+  bt_unpair(BT_ID_DEFAULT, BT_ADDR_LE_ANY);
+  bt_disable();
+  int err = bt_le_filter_accept_list_clear();
+  LOG_DBG("btn3 (%d)", err);
+  k_sleep(K_MSEC(4000));
+  sys_reboot(SYS_REBOOT_WARM);
+}
 
-  if (buttons & DK_BTN3_MSK)
-  {
-    bt_le_adv_stop();
-    bt_unpair(BT_ID_DEFAULT, BT_ADDR_LE_ANY);
-    bt_disable();
-    int err = bt_le_filter_accept_list_clear();
-    LOG_DBG("btn3 (%d)", err);
-    k_sleep(K_MSEC(4000));
-    sys_reboot(SYS_REBOOT_WARM);
-  }
+void run_reset(k_work *item);
+K_WORK_DELAYABLE_DEFINE(reset_work, run_reset);
+void run_reset(k_work *item)
+{
+  bt_disable();
+  LOG_DBG("btn4");
+  k_sleep(K_MSEC(4000));
+  sys_reboot(SYS_REBOOT_WARM);
+}
 
-  if (buttons & DK_BTN4_MSK)
+void on_input_subsys_callback(struct input_event *evt)
+{
+  LOG_DBG("Event: %d, %d, %d, %d", evt->sync, evt->code, evt->type, evt->value);
+  if (evt->value == 1)
   {
-    bt_disable();
-    LOG_DBG("btn4");
-    k_sleep(K_MSEC(4000));
-    sys_reboot(SYS_REBOOT_WARM);
+    switch (evt->code)
+    {
+    case 11: // button 1
+      k_work_schedule(&pair_work, K_NO_WAIT);
+      break;
+    case 2: // button 2
+      k_work_schedule(&time_work, K_NO_WAIT);
+      break;
+    case 3: // button 3
+      k_work_schedule(&unregister_work, K_NO_WAIT);
+      break;
+    case 4: // button 4
+      k_work_schedule(&reset_work, K_NO_WAIT);
+      break;
+    default:
+      break;
+    }
   }
 }
 
-int init_button(void)
+void run_blink(k_work *item);
+K_WORK_DELAYABLE_DEFINE(blink_work, run_blink);
+void run_blink(k_work *item)
 {
-  int err;
-
-  err = dk_buttons_init(button_changed);
-  if (err)
-  {
-    LOG_DBG("Cannot init buttons (err: %d)", err);
-  }
-
-  return err;
+  static int blink_status = 0;
+  dk_set_led(RUN_STATUS_LED, (++blink_status) % 2);
+  k_work_schedule(&blink_work, K_MSEC(500));
 }
+
+void run_init(k_work *item)
+{
+  dk_leds_init();
+  bt::init();
+  bt::auth::set_pairable(false);
+  INPUT_CALLBACK_DEFINE(NULL, on_input_subsys_callback);
+
+  k_work_schedule(&blink_work, K_NO_WAIT);
+}
+K_WORK_DEFINE(init_work, run_init);
 
 int main()
 {
-  init_button();
-  dk_leds_init();
-
-  bt::init();
-  bt::auth::set_pairable(false);
-
-  int blink_status = 0;
-  while (true)
-  {
-    dk_set_led(RUN_STATUS_LED, (++blink_status) % 2);
-    k_sleep(K_MSEC(500));
-  }
-
+  k_work_submit(&init_work);
   return 0;
 }
-
-// const struct bt_uuid_16 test = {
-//     .uuid = {BT_UUID_TYPE_16},
-//     .val = (0x1805),
-// };
-
-// err = bt_gatt_dm_start(conn, reinterpret_cast<const bt_uuid *>(&test), &discover_cb, NULL);
-// if (err)
-// {
-//   printk("Failed to start discovery (err %d)\n", err);
-// }
-
-// struct bt_le_adv_param param = BT_LE_ADV_PARAM_INIT(BT_LE_ADV_OPT_CONNECTABLE,
-//                                                     BT_GAP_ADV_FAST_INT_MIN_2,
-//                                                     BT_GAP_ADV_FAST_INT_MAX_2, NULL);
-
-// err = bt_le_adv_start(&param, ad, ARRAY_SIZE(ad), NULL, 0);
-// if (err)
-// {
-//   printk("Advertising failed to start (err %d)\n", err);
-//   return 0;
-// }

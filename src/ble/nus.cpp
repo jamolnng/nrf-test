@@ -8,7 +8,9 @@ LOG_MODULE_REGISTER(bt_app_nus, CONFIG_NRF_TEST_LOG_LEVEL);
 
 void data_received(bt_conn *conn, const uint8_t *const data, uint16_t len)
 {
-  LOG_HEXDUMP_DBG(data, len, "RX");
+  char str[sizeof("RX 000000")];
+  snprintf(str, sizeof(str), "RX %d", len);
+  LOG_HEXDUMP_DBG(data, len, str);
 }
 
 bt_nus_cb nus_cb = {
@@ -27,4 +29,13 @@ int bt::nus::init()
   LOG_DBG("NUS enabled");
 
   return 0;
+}
+
+void bt::nus::send(const uint8_t *data, uint16_t len)
+{
+  int err = bt_nus_send(NULL, data, len);
+  if (err)
+  {
+    LOG_ERR("Error sending NUS data (err %d)", err);
+  }
 }
