@@ -59,10 +59,13 @@ static const bt_data sd[] = {
 
 static void connected(bt_conn *conn, uint8_t err);
 static void disconnected(bt_conn *conn, uint8_t reason);
+void identity_resolved(struct bt_conn *conn, const bt_addr_le_t *rpa,
+                       const bt_addr_le_t *identity);
 static void security_changed(bt_conn *conn, bt_security_t level, bt_security_err err);
 BT_CONN_CB_DEFINE(conn_callbacks) = {
     .connected = connected,
     .disconnected = disconnected,
+    .identity_resolved = identity_resolved,
     .security_changed = security_changed,
 };
 
@@ -97,10 +100,6 @@ void request_mtu_exchange(bt_conn *conn)
   {
     LOG_ERR("MTU exchange failed (err %d)", err);
   }
-  // else
-  // {
-  //   LOG_DBG("MTU exchange pending");
-  // }
 }
 
 static void check_bond(const bt_bond_info *info, void *data)
@@ -114,6 +113,16 @@ static void check_bond(const bt_bond_info *info, void *data)
     LOG_DBG("Bond found");
     bc->found = true;
   }
+}
+
+void identity_resolved(struct bt_conn *conn, const bt_addr_le_t *rpa,
+                       const bt_addr_le_t *identity)
+{
+  char addr_identity[BT_ADDR_LE_STR_LEN];
+  char addr_rpa[BT_ADDR_LE_STR_LEN];
+  bt_addr_le_to_str(identity, addr_identity, sizeof(addr_identity));
+  bt_addr_le_to_str(rpa, addr_rpa, sizeof(addr_rpa));
+  LOG_DBG("Identity resolved %s -> %s", addr_rpa, addr_identity);
 }
 
 static void connected(bt_conn *conn, uint8_t err)
