@@ -107,8 +107,26 @@ K_WORK_DELAYABLE_DEFINE(batt_work, run_batt);
 void run_batt(k_work *item)
 {
   static uint8_t batt = 100;
-  batt -= 1;
+  static uint8_t dir = -1;
+  batt += dir;
   bt::bas::set_level(batt);
+
+  int msg_len;
+  char buf[100];
+
+  memset(buf, 0, sizeof(buf));
+  msg_len = snprintf(buf, sizeof(buf), "{\"t\":\"status\", \"bat\": %d, \"volt\": %d, \"chg\": %d} \n", batt,
+                     batt, dir == 1);
+  bt::nus::send(reinterpret_cast<uint8_t *>(buf), msg_len);
+
+  if (batt == 50)
+  {
+    dir = 1;
+  }
+  if (batt == 100)
+  {
+    dir = -1;
+  }
   k_work_schedule(&batt_work, K_MSEC(1000));
 }
 
