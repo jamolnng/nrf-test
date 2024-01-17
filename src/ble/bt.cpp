@@ -1,8 +1,22 @@
 #include "ble/bt.hpp"
 #include "ble/auth.hpp"
-#include "ble/cts.hpp"
 #include "ble/gatt_dm.hpp"
+
+#ifdef CONFIG_BT_AMS_CLIENT
+#include "ble/ams.hpp"
+#endif
+#ifdef CONFIG_BT_ANCS_CLIENT
+#include "ble/ancs.hpp"
+#endif
+#ifdef CONFIG_BT_CTS_CLIENT
+#include "ble/cts.hpp"
+#endif
+#ifdef CONFIG_BT_NUS
 #include "ble/nus.hpp"
+#endif
+#ifdef CONFIG_BT_BAS
+#include "ble/bas.hpp"
+#endif
 
 #include <zephyr/bluetooth/bluetooth.h>
 #include <zephyr/bluetooth/conn.h>
@@ -35,27 +49,35 @@ static const bt_data ad[] = {
     BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
     // BT_DATA_BYTES(BT_DATA_GAP_APPEARANCE, BT_BYTES_LIST_LE16(BT_APPEARANCE_SMARTWATCH)),
     BT_DATA_BYTES(BT_DATA_GAP_APPEARANCE, BT_BYTES_LIST_LE16(BT_APPEARANCE_GENERIC_WATCH)),
-    BT_DATA_BYTES(BT_DATA_UUID16_SOME,
-                  BT_UUID_16_ENCODE(BT_UUID_DIS_VAL),
-#ifdef CONFIG_BT_CTS_CLIENT
-                  BT_UUID_16_ENCODE(BT_UUID_CTS_VAL),
+    BT_DATA_BYTES(BT_DATA_UUID16_SOME, BT_UUID_16_ENCODE(BT_UUID_DIS_VAL)),
+#ifdef CONFIG_BT_ANCS_CLIENT
+    BT_DATA_BYTES(BT_DATA_SOLICIT128, BT_UUID_ANCS_VAL),
 #endif
-                  ),
-    BT_DATA_BYTES(BT_DATA_SOLICIT128,
-#ifdef CONFIG_BT_AMS_CLIENT
-                  BT_UUID_AMS_VAL,
-#endif
-#ifdef CONFIG_BT_NUS
-                  BT_UUID_NUS_VAL,
-#endif
-                  ),
 };
 
 static const bt_data sd[] = {
     BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
-    BT_DATA(BT_DATA_NAME_COMPLETE, DEVICE_NAME, DEVICE_NAME_LEN),
-    BT_DATA_BYTES(BT_DATA_UUID128_ALL, BLE_UUID_TRANSPORT_VAL),
+    BT_DATA_BYTES(BT_DATA_UUID128_SOME, BLE_UUID_TRANSPORT_VAL),
 };
+
+// static const bt_data sd[] = {
+//     BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
+//     // BT_DATA(BT_DATA_NAME_COMPLETE, DEVICE_NAME, DEVICE_NAME_LEN),
+//     BT_DATA_BYTES(BT_DATA_UUID128_ALL, BLE_UUID_TRANSPORT_VAL),
+//     BT_DATA_BYTES(BT_DATA_UUID16_ALL,
+//                   BT_UUID_16_ENCODE(BT_UUID_CTS_VAL),
+//                   BT_UUID_16_ENCODE(BT_UUID_BAS_VAL), ),
+//     BT_DATA_BYTES(BT_DATA_SOLICIT128,
+// #ifdef CONFIG_BT_AMS_CLIENT
+//                   BT_UUID_AMS_VAL,
+// #endif
+// #ifdef CONFIG_BT_ANCS_CLIENT
+//                   BT_UUID_ANCS_VAL,
+// #endif
+// #ifdef CONFIG_BT_NUS
+//                   BT_UUID_NUS_VAL,
+// #endif
+//                   )};
 
 static void connected(bt_conn *conn, uint8_t err);
 static void disconnected(bt_conn *conn, uint8_t reason);
@@ -195,35 +217,11 @@ static void security_changed(bt_conn *conn, bt_security_t level, bt_security_err
     LOG_DBG("Security changed: %s level %u", addr, level);
     if (level >= BT_SECURITY_L2)
     {
-      int err;
-#ifdef CONFIG_BT_CTS_CLIENT
-      err = bt::cts::init();
-      if (err)
-      {
-        LOG_ERR("Failed to enable CTS Client, err: %d", err);
-      }
-#endif
-
-#ifdef CONFIG_BT_AMS_CLIENT
-      err = bt::ams::init();
-      if (err)
-      {
-        LOG_ERR("Failed to enable AMS Client, err: %d", err);
-      }
-#endif
-
-#ifdef CONFIG_BT_ANCS_CLIENT
-      err = bt::ancs::init();
-      if (err)
-      {
-        LOG_ERR("Failed to enable ANCS Client, err: %d", err);
-      }
-#endif
       // only start services if we have a secure connection
       bt::gatt_dm::start(conn);
 
 #ifdef CONFIG_BT_NUS
-      err = bt::nus::init();
+      int err = bt::nus::init();
       if (err)
       {
         LOG_ERR("Failed to enable NUS, err: %d", err);
@@ -271,7 +269,7 @@ int bt::init()
     return err;
   }
 
-  auto param = BT_LE_ADV_CONN[0];
+  auto param = BT_LE_ADV_CONN_NAME[0];
 
   int bond_count = 0;
   bt_foreach_bond(BT_ID_DEFAULT, add_bonded_addr_to_filter_list, &bond_count);

@@ -1,6 +1,14 @@
 #include "ble/gatt_dm.hpp"
+
+#ifdef CONFIG_BT_CTS_CLIENT
 #include "ble/cts.hpp"
-#include "ble/nus.hpp"
+#endif
+#ifdef CONFIG_BT_AMS_CLIENT
+#include "ble/ams.hpp"
+#endif
+#ifdef CONFIG_BT_ANCS_CLIENT
+#include "ble/ancs.hpp"
+#endif
 
 #include <bluetooth/gatt_dm.h>
 
@@ -60,6 +68,11 @@ void discover_all_completed_cb(bt_gatt_dm *dm, void *ctx)
     {
       found[bt::gatt_dm::CTS_Client] = true;
       LOG_DBG("%s found", service_names[bt::gatt_dm::CTS_Client]);
+      int err = bt::cts::init();
+      if (err)
+      {
+        LOG_ERR("Failed to enable CTS Client, err: %d", err);
+      }
       bt::cts::discover_completed(dm, ctx);
       handled = true;
     }
@@ -72,6 +85,11 @@ void discover_all_completed_cb(bt_gatt_dm *dm, void *ctx)
     {
       found[bt::gatt_dm::AMS_Client] = true;
       LOG_DBG("%s found", service_names[bt::gatt_dm::AMS_Client]);
+      int err = bt::ams::init();
+      if (err)
+      {
+        LOG_ERR("Failed to enable AMS Client, err: %d", err);
+      }
       bt::ams::discover_completed(dm, ctx);
       handled = true;
     }
@@ -79,11 +97,16 @@ void discover_all_completed_cb(bt_gatt_dm *dm, void *ctx)
 #endif
 #ifdef CONFIG_BT_ANCS_CLIENT
   {
-    bt_uuid_128 param = BT_UUID_INIT_128(BT_UUID_AMS_VAL);
+    bt_uuid_128 param = BT_UUID_INIT_128(BT_UUID_ANCS_VAL);
     if (bt_uuid_cmp(gatt_service->uuid, reinterpret_cast<bt_uuid *>(&param)) == 0)
     {
       found[bt::gatt_dm::ANCS_Client] = true;
       LOG_DBG("%s found", service_names[bt::gatt_dm::ANCS_Client]);
+      int err = bt::ancs::init();
+      if (err)
+      {
+        LOG_ERR("Failed to enable ANCS Client, err: %d", err);
+      }
       bt::ancs::discover_completed(dm, ctx);
       handled = true;
     }

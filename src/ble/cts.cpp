@@ -1,3 +1,5 @@
+#ifdef CONFIG_BT_CTS_CLIENT
+
 #include "ble/cts.hpp"
 #include "ble/utils.hpp"
 #include "ble/gatt_dm.hpp"
@@ -79,3 +81,5 @@ void bt::cts::read_current_time(bt_cts_read_cb cb)
     }
   }
 }
+
+#endif

@@ -1,4 +1,5 @@
 #include "ble/bt.hpp"
+#include "ble/bas.hpp"
 #include "ble/auth.hpp"
 #include "ble/cts.hpp"
 #include "ble/nus.hpp"
@@ -101,6 +102,16 @@ void run_blink(k_work *item)
   k_work_schedule(&blink_work, K_MSEC(500));
 }
 
+void run_batt(k_work *item);
+K_WORK_DELAYABLE_DEFINE(batt_work, run_batt);
+void run_batt(k_work *item)
+{
+  static uint8_t batt = 100;
+  batt -= 1;
+  bt::bas::set_level(batt);
+  k_work_schedule(&batt_work, K_MSEC(1000));
+}
+
 void run_init(k_work *item)
 {
   dk_leds_init();
@@ -109,6 +120,7 @@ void run_init(k_work *item)
   INPUT_CALLBACK_DEFINE(NULL, on_input_subsys_callback);
 
   k_work_schedule(&blink_work, K_NO_WAIT);
+  k_work_schedule(&batt_work, K_NO_WAIT);
 }
 K_WORK_DEFINE(init_work, run_init);
 
