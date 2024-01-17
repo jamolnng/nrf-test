@@ -2,7 +2,7 @@
 
 #include <zephyr/logging/log.h>
 
-LOG_MODULE_REGISTER(bt_utils, CONFIG_NRF_TEST_LOG_LEVEL);
+LOG_MODULE_REGISTER(bt_utils, CONFIG_NRF_TEST_BLE_LOG_LEVEL);
 
 static const char *day_of_week[] = {
     "Unknown",

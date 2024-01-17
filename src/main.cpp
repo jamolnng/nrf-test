@@ -5,6 +5,8 @@
 #include "ble/nus.hpp"
 #include "ble/utils.hpp"
 
+#include "system/gadgetbridge/gb.hpp"
+
 #include <zephyr/kernel.h>
 #include <zephyr/input/input.h>
 #include <zephyr/logging/log.h>
@@ -16,6 +18,7 @@
 LOG_MODULE_REGISTER(main, CONFIG_NRF_TEST_LOG_LEVEL);
 
 #define RUN_STATUS_LED DK_LED1
+#define BT_STATUS_LED DK_LED2
 
 void read_current_time_cb(struct bt_cts_client *cts_c,
                           struct bt_cts_current_time *current_time,
@@ -99,6 +102,7 @@ void run_blink(k_work *item)
 {
   static int blink_status = 0;
   dk_set_led(RUN_STATUS_LED, (++blink_status) % 2);
+  dk_set_led(BT_STATUS_LED, bt::connected());
   k_work_schedule(&blink_work, K_MSEC(500));
 }
 
@@ -106,26 +110,29 @@ void run_batt(k_work *item);
 K_WORK_DELAYABLE_DEFINE(batt_work, run_batt);
 void run_batt(k_work *item)
 {
-  static uint8_t batt = 100;
-  static uint8_t dir = -1;
-  batt += dir;
-  bt::bas::set_level(batt);
-
-  int msg_len;
-  char buf[100];
-
-  memset(buf, 0, sizeof(buf));
-  msg_len = snprintf(buf, sizeof(buf), "{\"t\":\"status\", \"bat\": %d, \"volt\": %d, \"chg\": %d} \n", batt,
-                     batt, dir == 1);
-  bt::nus::send(reinterpret_cast<uint8_t *>(buf), msg_len);
-
-  if (batt == 50)
+  if (bt::connected())
   {
-    dir = 1;
-  }
-  if (batt == 100)
-  {
-    dir = -1;
+    static uint8_t batt = 100;
+    static uint8_t dir = -1;
+    batt += dir;
+    bt::bas::set_level(batt);
+
+    int msg_len;
+    char buf[100];
+
+    memset(buf, 0, sizeof(buf));
+    msg_len = snprintf(buf, sizeof(buf), "{\"t\":\"status\", \"bat\": %d, \"volt\": %d, \"chg\": %d} \n", batt,
+                       batt, dir == 1);
+    bt::nus::send(reinterpret_cast<uint8_t *>(buf), msg_len);
+
+    if (batt == 50)
+    {
+      dir = 1;
+    }
+    if (batt == 100)
+    {
+      dir = -1;
+    }
   }
   k_work_schedule(&batt_work, K_MSEC(1000));
 }
@@ -135,6 +142,8 @@ void run_init(k_work *item)
   dk_leds_init();
   bt::init();
   bt::auth::set_pairable(false);
+  system::gadgetbridge::init();
+
   INPUT_CALLBACK_DEFINE(NULL, on_input_subsys_callback);
 
   k_work_schedule(&blink_work, K_NO_WAIT);

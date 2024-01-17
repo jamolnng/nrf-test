@@ -9,7 +9,7 @@
 
 #include <bluetooth/services/cts_client.h>
 
-LOG_MODULE_REGISTER(bt_cts, CONFIG_NRF_TEST_LOG_LEVEL);
+LOG_MODULE_REGISTER(bt_cts, CONFIG_NRF_TEST_BLE_LOG_LEVEL);
 
 static bt_cts_client cts_c;
 

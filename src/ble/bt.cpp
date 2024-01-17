@@ -18,6 +18,8 @@
 #include "ble/bas.hpp"
 #endif
 
+#include "system/gadgetbridge/gb.hpp"
+
 #include <zephyr/bluetooth/bluetooth.h>
 #include <zephyr/bluetooth/conn.h>
 #include <zephyr/bluetooth/uuid.h>
@@ -27,10 +29,10 @@
 
 #include <bluetooth/gatt_dm.h>
 
-LOG_MODULE_REGISTER(bt, CONFIG_NRF_TEST_LOG_LEVEL);
+LOG_MODULE_REGISTER(bt, CONFIG_NRF_TEST_BLE_LOG_LEVEL);
 
 static uint32_t mtu_max_send_len = 0;
-
+bool _connected = false;
 // static bt_conn *current_conn;
 
 struct bond_check
@@ -186,6 +188,8 @@ static void connected(bt_conn *conn, uint8_t err)
       return;
     }
   }
+
+  _connected = true;
 }
 
 static void disconnected(bt_conn *conn, uint8_t reason)
@@ -199,6 +203,8 @@ static void disconnected(bt_conn *conn, uint8_t reason)
   //   bt_conn_unref(current_conn);
   //   current_conn = NULL;
   // }
+
+  _connected = false;
 }
 
 static void security_changed(bt_conn *conn, bt_security_t level, bt_security_err err)
@@ -297,4 +303,9 @@ int bt::init()
 uint32_t bt::max_send_len()
 {
   return mtu_max_send_len;
+}
+
+bool bt::connected()
+{
+  return _connected;
 }

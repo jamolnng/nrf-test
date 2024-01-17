@@ -13,6 +13,9 @@ target_sources(app PRIVATE
   src/ble/gatt_dm.cpp
   src/ble/nus.cpp
   src/ble/utils.cpp
+
+  src/system/gadgetbridge/gb.cpp
+
   src/main.cpp
 )
 

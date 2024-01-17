@@ -5,7 +5,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
-LOG_MODULE_REGISTER(bt_ams, CONFIG_NRF_TEST_LOG_LEVEL);
+LOG_MODULE_REGISTER(bt_ams, CONFIG_NRF_TEST_BLE_LOG_LEVEL);
 
 bt_ams_client ams_c;
 

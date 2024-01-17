@@ -7,5 +7,9 @@ menu "NRF_TEST"
     module = NRF_TEST
     module-str = NRF_TEST
     source "subsys/logging/Kconfig.template.log_config"
+
+    module = NRF_TEST_BLE
+    module-str = NRF_TEST_BLE
+    source "subsys/logging/Kconfig.template.log_config"
   endmenu
 endmenu

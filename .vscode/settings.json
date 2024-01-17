@@ -1,4 +1,14 @@
 {
   "nrf-connect.topdir": "${nrf-connect.sdk:2.5.1}",
   "nrf-connect.toolchain.path": "${nrf-connect.toolchain:2.5.1}",
+  "files.associations": {
+    "string_view": "cpp",
+    "array": "cpp",
+    "*.tcc": "cpp",
+    "vector": "cpp",
+    "memory_resource": "cpp",
+    "unordered_map": "cpp",
+    "numeric": "cpp",
+    "ostream": "cpp"
+  },
 }

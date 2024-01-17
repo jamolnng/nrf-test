@@ -16,7 +16,7 @@
 #include <zephyr/bluetooth/uuid.h>
 
 // can't call it bt_gatt_dm since that's already in use :/
-LOG_MODULE_REGISTER(bt_app_gatt_dm, CONFIG_NRF_TEST_LOG_LEVEL);
+LOG_MODULE_REGISTER(bt_app_gatt_dm, CONFIG_NRF_TEST_BLE_LOG_LEVEL);
 
 void discover_all_completed_cb(bt_gatt_dm *dm, void *ctx);
 void discover_all_service_not_found_cb(bt_conn *conn, void *ctx);
@@ -134,7 +134,7 @@ void discover_all_service_not_found_cb(bt_conn *conn, void *ctx)
   {
     if (!f)
     {
-      LOG_ERR("Service %s not found", service_names[index]);
+      LOG_WRN("Service %s not found", service_names[index]);
     }
     index++;
   }

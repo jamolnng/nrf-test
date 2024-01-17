@@ -7,8 +7,14 @@ namespace bt
 {
   namespace nus
   {
+    struct nus_cb
+    {
+      void (*receive)(const uint8_t *data, uint16_t len);
+    };
+
     int init();
     void discover_completed(bt_gatt_dm *dm, void *ctx);
     void send(const uint8_t *data, uint16_t len);
+    void set_callback(nus_cb *recv_cb);
   }
 }
