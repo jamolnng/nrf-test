@@ -75,16 +75,16 @@ void on_input_subsys_callback(struct input_event *evt)
   {
     switch (evt->code)
     {
-    case 11: // button 1
+    case INPUT_KEY_0: // button 1
       k_work_schedule(&pair_work, K_NO_WAIT);
       break;
-    case 2: // button 2
+    case INPUT_KEY_1: // button 2
       k_work_schedule(&time_work, K_NO_WAIT);
       break;
-    case 3: // button 3
+    case INPUT_KEY_2: // button 3
       k_work_schedule(&unregister_work, K_NO_WAIT);
       break;
-    case 4: // button 4
+    case INPUT_KEY_3: // button 4
       k_work_schedule(&reset_work, K_NO_WAIT);
       break;
     default:
