@@ -7,6 +7,7 @@
 LOG_MODULE_REGISTER(bt_app_nus, CONFIG_NRF_TEST_BLE_LOG_LEVEL);
 
 struct bt::nus::nus_cb *callbacks;
+bool _can_send = false;
 
 void data_received(bt_conn *conn, const uint8_t *const data, uint16_t len)
 {
@@ -22,8 +23,14 @@ void data_received(bt_conn *conn, const uint8_t *const data, uint16_t len)
   // LOG_HEXDUMP_DBG(data, len, str);
 }
 
+void send_enabled(bt_nus_send_status status)
+{
+  _can_send = status == bt_nus_send_status::BT_NUS_SEND_STATUS_ENABLED;
+}
+
 bt_nus_cb _nus_cb = {
     .received = data_received,
+    .send_enabled = send_enabled,
 };
 
 int bt::nus::init()
@@ -40,13 +47,15 @@ int bt::nus::init()
   return 0;
 }
 
-void bt::nus::send(const uint8_t *data, uint16_t len)
+int bt::nus::send(const uint8_t *data, uint16_t len)
 {
   int err = bt_nus_send(NULL, data, len);
   if (err)
   {
     LOG_ERR("Error sending NUS data (err %d)", err);
+    return err;
   }
+  return 0;
 }
 
 void bt::nus::set_callback(nus_cb *cb)
@@ -55,4 +64,8 @@ void bt::nus::set_callback(nus_cb *cb)
   {
     callbacks = cb;
   }
+}
+bool bt::nus::can_send()
+{
+  return _can_send;
 }

@@ -126,6 +126,16 @@ void request_mtu_exchange(bt_conn *conn)
   }
 }
 
+void identity_resolved(struct bt_conn *conn, const bt_addr_le_t *rpa,
+                       const bt_addr_le_t *identity)
+{
+  char addr_identity[BT_ADDR_LE_STR_LEN];
+  char addr_rpa[BT_ADDR_LE_STR_LEN];
+  bt_addr_le_to_str(identity, addr_identity, sizeof(addr_identity));
+  bt_addr_le_to_str(rpa, addr_rpa, sizeof(addr_rpa));
+  LOG_DBG("Identity resolved %s -> %s", addr_rpa, addr_identity);
+}
+
 static void check_bond(const bt_bond_info *info, void *data)
 {
   auto bc = reinterpret_cast<bond_check *>(data);
@@ -139,18 +149,25 @@ static void check_bond(const bt_bond_info *info, void *data)
   }
 }
 
-void identity_resolved(struct bt_conn *conn, const bt_addr_le_t *rpa,
-                       const bt_addr_le_t *identity)
+bool existing_bond(bt_conn *conn)
 {
-  char addr_identity[BT_ADDR_LE_STR_LEN];
-  char addr_rpa[BT_ADDR_LE_STR_LEN];
-  bt_addr_le_to_str(identity, addr_identity, sizeof(addr_identity));
-  bt_addr_le_to_str(rpa, addr_rpa, sizeof(addr_rpa));
-  LOG_DBG("Identity resolved %s -> %s", addr_rpa, addr_identity);
+  // check for existing bond, if not, disconnect
+  auto conn_addr = bt_conn_get_dst(conn);
+  auto bc = bond_check{
+      .found = false,
+      .addr = *conn_addr};
+  bt_foreach_bond(BT_ID_DEFAULT, check_bond, &bc);
+  // if (!bc.found)
+  // {
+  //   bt_conn_disconnect(conn, BT_HCI_ERR_AUTH_FAIL);
+  //   return;
+  // }
+  return bc.found;
 }
 
 static void connected(bt_conn *conn, uint8_t err)
 {
+  _connected = false;
   if (err)
   {
     LOG_ERR("Connection failed (err 0x%02x)", err);
@@ -164,7 +181,7 @@ static void connected(bt_conn *conn, uint8_t err)
   LOG_DBG("Initial MTU: %d", mtu_max_send_len);
   request_mtu_exchange(conn);
 
-  if (bt::auth::pairable())
+  if (bt::auth::pairable() || existing_bond(conn))
   {
     int rc = bt_conn_set_security(conn, BT_SECURITY_L2);
     if (rc != 0)
@@ -176,20 +193,8 @@ static void connected(bt_conn *conn, uint8_t err)
   }
   else
   {
-    // check for existing bond, if not, disconnect
-    auto conn_addr = bt_conn_get_dst(conn);
-    auto bc = bond_check{
-        .found = false,
-        .addr = *conn_addr};
-    bt_foreach_bond(BT_ID_DEFAULT, check_bond, &bc);
-    if (!bc.found)
-    {
-      bt_conn_disconnect(conn, BT_HCI_ERR_AUTH_FAIL);
-      return;
-    }
+    bt_conn_disconnect(conn, BT_HCI_ERR_AUTH_FAIL);
   }
-
-  _connected = true;
 }
 
 static void disconnected(bt_conn *conn, uint8_t reason)
@@ -233,6 +238,7 @@ static void security_changed(bt_conn *conn, bt_security_t level, bt_security_err
         LOG_ERR("Failed to enable NUS, err: %d", err);
       }
 #endif
+      _connected = true;
     }
   }
 }

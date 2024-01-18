@@ -96,6 +96,16 @@ void on_input_subsys_callback(struct input_event *evt)
   }
 }
 
+void run_send(k_work *item);
+K_WORK_DELAYABLE_DEFINE(send_work, run_send);
+void run_send(k_work *item)
+{
+  if (!bt::connected() || system::gadgetbridge::send_ver() || !bt::nus::can_send())
+  {
+    k_work_schedule(&send_work, K_MSEC(500));
+  }
+}
+
 void run_blink(k_work *item);
 K_WORK_DELAYABLE_DEFINE(blink_work, run_blink);
 void run_blink(k_work *item)
@@ -148,6 +158,7 @@ void run_init(k_work *item)
 
   k_work_schedule(&blink_work, K_NO_WAIT);
   k_work_schedule(&batt_work, K_NO_WAIT);
+  k_work_schedule(&send_work, K_NO_WAIT);
 }
 K_WORK_DEFINE(init_work, run_init);
 

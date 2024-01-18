@@ -14,7 +14,8 @@ namespace bt
 
     int init();
     void discover_completed(bt_gatt_dm *dm, void *ctx);
-    void send(const uint8_t *data, uint16_t len);
+    int send(const uint8_t *data, uint16_t len);
+    bool can_send();
     void set_callback(nus_cb *recv_cb);
   }
 }
