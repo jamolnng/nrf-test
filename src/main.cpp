@@ -31,7 +31,7 @@ void read_current_time_cb(struct bt_cts_client *cts_c,
   }
   bt::current_time_print(current_time);
 }
-#define GB_HTTP_REQUEST "{\"t\":\"http\", \"url\":\"https://opentdb.com/api.php?amount=1&difficulty=easy&type=boolean\"} \n"
+#define GB_HTTP_REQUEST "{\"t\":\"http\",\"id\":\"quiz\",\"url\":\"https://opentdb.com/api.php?amount=1&difficulty=easy&type=boolean\"} \n"
 
 void run_pair(k_work *item);
 K_WORK_DELAYABLE_DEFINE(pair_work, run_pair);

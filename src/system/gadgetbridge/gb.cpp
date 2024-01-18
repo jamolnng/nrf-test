@@ -31,6 +31,9 @@ enum Type
   MusicInfo,
   MusicState,
   Http,
+  Alarm,
+  Find,
+  ActFetch,
   IsGPSActive,
 };
 
@@ -98,6 +101,18 @@ Type str_to_type(std::string_view sv)
   {
     return Http;
   }
+  if (sv == "alarm"sv)
+  {
+    return Alarm;
+  }
+  if (sv == "find"sv)
+  {
+    return Find;
+  }
+  if (sv == "actfetch"sv)
+  {
+    return ActFetch;
+  }
   if (sv == "is_gps_active"sv)
   {
     return IsGPSActive;
@@ -139,6 +154,8 @@ void dump_gb(std::string_view sv)
     LOG_DBG("%.*s", sv.size(), sv.data());
     break;
   case Http:
+    v = extract_value_str("id"sv, sv);
+    LOG_DBG("     id: %.*s", v.size(), v.data());
     v = extract_value_str("resp"sv, sv);
     LOG_DBG("   resp: %.*s", v.size(), v.data());
     v = extract_value_str("err"sv, sv);
