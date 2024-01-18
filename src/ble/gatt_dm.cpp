@@ -1,5 +1,8 @@
 #include "ble/gatt_dm.hpp"
 
+#ifdef CONFIG_BT_GATTP
+#include "ble/gap.hpp"
+#endif
 #ifdef CONFIG_BT_CTS_CLIENT
 #include "ble/cts.hpp"
 #endif
@@ -28,6 +31,12 @@ const bt_gatt_dm_cb discover_all_cb = {
 };
 
 bool found[] = {
+#ifdef CONFIG_BT_GATTP
+    false,
+#endif
+#ifdef CONFIG_GATT_0X1801_CLIENT
+    false,
+#endif
 #ifdef CONFIG_BT_CTS_CLIENT
     false,
 #endif
@@ -40,6 +49,12 @@ bool found[] = {
 };
 
 const char *service_names[] = {
+#ifdef CONFIG_BT_GATTP
+    "GAP Client",
+#endif
+#ifdef CONFIG_GATT_0X1801_CLIENT
+    "GATT 0x1801 Client",
+#endif
 #ifdef CONFIG_BT_CTS_CLIENT
     "CTS Client",
 #endif
@@ -61,6 +76,25 @@ void discover_all_completed_cb(bt_gatt_dm *dm, void *ctx)
       bt_gatt_dm_attr_service_val(gatt_service_attr);
 
   bool handled = false;
+#ifdef CONFIG_BT_GATTP
+  {
+    bt_uuid_16 param = BT_UUID_INIT_16(BT_UUID_GAP_VAL);
+    if (bt_uuid_cmp(gatt_service->uuid, reinterpret_cast<bt_uuid *>(&param)) == 0)
+    {
+      found[bt::gatt_dm::GAP_Client] = true;
+      LOG_DBG("%s found", service_names[bt::gatt_dm::GAP_Client]);
+      int err = bt::gap::init();
+      if (err)
+      {
+        LOG_ERR("Failed to enable GAP Client, err: %d", err);
+      }
+      bt::gap::discover_completed(dm, ctx);
+      handled = true;
+    }
+  }
+#endif
+#ifdef CONFIG_GATT_0X1801_CLIENT
+#endif
 #ifdef CONFIG_BT_CTS_CLIENT
   {
     bt_uuid_16 param = BT_UUID_INIT_16(BT_UUID_CTS_VAL);

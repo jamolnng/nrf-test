@@ -3,6 +3,11 @@ menu "Zephyr Kernel"
 endmenu
 
 menu "NRF_TEST"
+  menu "Bluetooth"
+    config GATT_0X1801_CLIENT
+      bool "GATT_0X1801_CLIENT"
+      default y
+  endmenu
   menu "Logging"
     module = NRF_TEST
     module-str = NRF_TEST

@@ -2,6 +2,7 @@
 #include "ble/bas.hpp"
 #include "ble/auth.hpp"
 #include "ble/cts.hpp"
+#include "ble/gap.hpp"
 #include "ble/nus.hpp"
 #include "ble/utils.hpp"
 
@@ -31,6 +32,17 @@ void read_current_time_cb(struct bt_cts_client *cts_c,
   }
   bt::current_time_print(current_time);
 }
+
+void read_device_name_cb(bt::gap_client::gap_client *client, const void *data, uint16_t len, int err)
+{
+  if (err)
+  {
+    LOG_ERR("Cannot read device name: error: %d", err);
+    return;
+  }
+  LOG_DBG("%.*s", len, reinterpret_cast<const char *>(data));
+}
+
 #define GB_HTTP_REQUEST "{\"t\":\"http\",\"id\":\"quiz\",\"url\":\"https://opentdb.com/api.php?amount=1&difficulty=easy&type=boolean\"} \n"
 
 void run_pair(k_work *item);
@@ -45,6 +57,7 @@ K_WORK_DELAYABLE_DEFINE(time_work, run_time);
 void run_time(k_work *item)
 {
   bt::cts::read_current_time(read_current_time_cb);
+  bt::gap::read_device_name(read_device_name_cb);
   bt::nus::send(reinterpret_cast<const uint8_t *>(GB_HTTP_REQUEST), sizeof(GB_HTTP_REQUEST) - 1);
 }
 

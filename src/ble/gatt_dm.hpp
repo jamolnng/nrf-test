@@ -8,6 +8,12 @@ namespace bt
   {
     enum Service
     {
+#ifdef CONFIG_BT_GATTP
+      GAP_Client,
+#endif
+#ifdef CONFIG_GATT_0X1801_CLIENT
+      GATT_0X1801_Client,
+#endif
 #ifdef CONFIG_BT_CTS_CLIENT
       CTS_Client,
 #endif

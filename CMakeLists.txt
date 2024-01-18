@@ -10,9 +10,11 @@ target_sources(app PRIVATE
   src/ble/ancs.cpp
   src/ble/bas.cpp
   src/ble/cts.cpp
+  src/ble/gap.cpp
   src/ble/gatt_dm.cpp
   src/ble/nus.cpp
   src/ble/utils.cpp
+  src/ble/services/gap_client.cpp
 
   src/system/gadgetbridge/gb.cpp
 
