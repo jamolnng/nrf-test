@@ -3,9 +3,13 @@
 #include "ble/nus.hpp"
 
 #include <zephyr/logging/log.h>
+#include <zephyr/data/json.h>
+#include <zephyr/types.h>
 
 #include <string_view>
 #include <array>
+
+LOG_MODULE_REGISTER(gadgetbridge, CONFIG_NRF_TEST_LOG_LEVEL);
 
 using namespace std::string_view_literals;
 
@@ -13,7 +17,59 @@ constexpr auto MAX_RECV_LEN = 1000;
 std::array<uint8_t, MAX_RECV_LEN> recv_buf;
 size_t recv_pos;
 
-LOG_MODULE_REGISTER(gadgetbridge, CONFIG_NRF_TEST_LOG_LEVEL);
+struct message_type
+{
+  json_obj_token type;
+};
+
+const json_obj_descr message_type_desc[] = {
+    JSON_OBJ_DESCR_PRIM_NAMED(message_type, "t", type, JSON_TOK_OPAQUE),
+};
+
+struct notify
+{
+  json_obj_token type;
+  long id;
+  json_obj_token title;
+  json_obj_token subject;
+  json_obj_token body;
+  json_obj_token sender;
+};
+
+const json_obj_descr notify_desc[] = {
+    JSON_OBJ_DESCR_PRIM_NAMED(notify, "t", type, JSON_TOK_OPAQUE),
+    JSON_OBJ_DESCR_PRIM(notify, id, JSON_TOK_NUMBER),
+    JSON_OBJ_DESCR_PRIM(notify, title, JSON_TOK_OPAQUE),
+    JSON_OBJ_DESCR_PRIM(notify, subject, JSON_TOK_OPAQUE),
+    JSON_OBJ_DESCR_PRIM(notify, body, JSON_TOK_OPAQUE),
+    JSON_OBJ_DESCR_PRIM(notify, sender, JSON_TOK_OPAQUE),
+};
+
+struct notify_remove
+{
+  json_obj_token type;
+  long id;
+};
+
+const json_obj_descr notify_remove_desc[] = {
+    JSON_OBJ_DESCR_PRIM_NAMED(notify_remove, "t", type, JSON_TOK_OPAQUE),
+    JSON_OBJ_DESCR_PRIM(notify_remove, id, JSON_TOK_NUMBER),
+};
+
+struct http_resp
+{
+  json_obj_token type;
+  json_obj_token id;
+  json_obj_token resp;
+  json_obj_token err;
+};
+
+const json_obj_descr http_resp_desc[] = {
+    JSON_OBJ_DESCR_PRIM_NAMED(http_resp, "t", type, JSON_TOK_OPAQUE),
+    JSON_OBJ_DESCR_PRIM(http_resp, id, JSON_TOK_OPAQUE),
+    JSON_OBJ_DESCR_PRIM(http_resp, resp, JSON_TOK_OPAQUE),
+    JSON_OBJ_DESCR_PRIM(http_resp, err, JSON_TOK_OPAQUE),
+};
 
 enum State
 {
@@ -37,17 +93,9 @@ enum Type
   IsGPSActive,
 };
 
-static std::array<char, 100> key_tmp; // string views dont require null terminator so we can save us some stack allocation
-std::string_view extract_value_str(std::string_view key, std::string_view data)
+std::string_view extract_type(std::string_view data)
 {
-  key_tmp[0] = '"';
-  std::copy(key.begin(), key.end(), &key_tmp[1]);
-  key_tmp[key.size() + 1] = '"';
-  key_tmp[key.size() + 2] = ':';
-  key_tmp[key.size() + 3] = '"';
-
-  key = std::string_view(key_tmp.data(), key.size() + 4);
-
+  static const auto key = "\"t\":\""sv;
   size_t idx;
   if ((idx = data.find(key)) != std::string_view::npos)
   {
@@ -56,18 +104,12 @@ std::string_view extract_value_str(std::string_view key, std::string_view data)
     while ((idx = search.find('"')) != std::string_view::npos)
     {
       if (idx == 0)
-      {
         break;
-      }
       len += idx;
       if (search[idx - 1] != '\\')
-      {
         break;
-      }
       else
-      {
         len++;
-      }
       search = search.substr(idx + 1);
     }
     return data.substr(start + key.size()).substr(0, len);
@@ -78,90 +120,121 @@ std::string_view extract_value_str(std::string_view key, std::string_view data)
 Type str_to_type(std::string_view sv)
 {
   if (sv == "notify"sv)
-  {
     return Notify;
-  }
   if (sv == "notify-"sv)
-  {
     return NotifyRemove;
-  }
   if (sv == "weather"sv)
-  {
     return Weather;
-  }
   if (sv == "musicinfo"sv)
-  {
     return MusicInfo;
-  }
   if (sv == "musicstate"sv)
-  {
     return MusicState;
-  }
   if (sv == "http"sv)
-  {
     return Http;
-  }
   if (sv == "alarm"sv)
-  {
     return Alarm;
-  }
   if (sv == "find"sv)
-  {
     return Find;
-  }
   if (sv == "actfetch"sv)
-  {
     return ActFetch;
-  }
   if (sv == "is_gps_active"sv)
-  {
     return IsGPSActive;
-  }
   return Unknown;
+}
+
+void dump_notify(std::string_view sv)
+{
+  notify notif;
+  int ret = json_obj_parse(const_cast<char *>(sv.data()),
+                           sv.size(),
+                           notify_desc,
+                           ARRAY_SIZE(notify_desc),
+                           &notif);
+  if (ret < 0)
+  {
+    LOG_ERR("JSON parse error: %d", ret);
+  }
+  else
+  {
+    LOG_DBG("   Type: %.*s", notif.type.length, notif.type.start);
+    LOG_DBG("     ID: %ld", notif.id);
+    LOG_DBG("  Title: %.*s", notif.title.length, notif.title.start);
+    LOG_DBG("Subject: %.*s", notif.subject.length, notif.subject.start);
+    LOG_DBG("   Body: %.*s", notif.body.length, notif.body.start);
+    LOG_DBG(" Sender: %.*s", notif.sender.length, notif.sender.start);
+  }
+}
+
+void dump_notify_remove(std::string_view sv)
+{
+  notify_remove notif;
+  int ret = json_obj_parse(const_cast<char *>(sv.data()),
+                           sv.size(),
+                           notify_remove_desc,
+                           ARRAY_SIZE(notify_remove_desc),
+                           &notif);
+  if (ret < 0)
+  {
+    LOG_ERR("JSON parse error: %d", ret);
+  }
+  else
+  {
+    LOG_DBG("Type: %.*s", notif.type.length, notif.type.start);
+    LOG_DBG("  ID: %ld", notif.id);
+  }
+}
+
+void dump_http_resp(std::string_view sv)
+{
+  http_resp resp;
+  int ret = json_obj_parse(const_cast<char *>(sv.data()),
+                           sv.size(),
+                           http_resp_desc,
+                           ARRAY_SIZE(http_resp_desc),
+                           &resp);
+  if (ret < 0)
+  {
+    LOG_ERR("JSON parse error: %d", ret);
+  }
+  else
+  {
+    LOG_DBG("Type: %.*s", resp.type.length, resp.type.start);
+    LOG_DBG("  ID: %.*s", resp.id.length, resp.id.start);
+    if (ret == 0x7)
+    {
+      LOG_DBG("Resp: %.*s", resp.resp.length, resp.resp.start);
+    }
+    if (ret == 0xB)
+    {
+      LOG_DBG(" Err: %.*s", resp.err.length, resp.err.start);
+    }
+  }
 }
 
 void dump_gb(std::string_view sv)
 {
-  auto v = extract_value_str("t"sv, sv);
-  LOG_DBG("      t: %.*s", v.size(), v.data());
-  switch (str_to_type(extract_value_str("t"sv, sv)))
+  message_type base;
+  int ret = json_obj_parse(const_cast<char *>(sv.data()),
+                           sv.size(),
+                           message_type_desc,
+                           ARRAY_SIZE(message_type_desc),
+                           &base);
+  auto type_str = std::string_view(base.type.start, base.type.length);
+  if (ret < 0)
+  {
+    LOG_ERR("JSON decode error: %d", ret);
+    return;
+  }
+  switch (str_to_type(type_str))
   {
   case Notify:
-    // v = extract_value_long("id"sv, sv);
-    // LOG_DBG("     id: %.*s".v.size(), v.data());
-    v = extract_value_str("src"sv, sv);
-    LOG_DBG("    src: %.*s", v.size(), v.data());
-    v = extract_value_str("title"sv, sv);
-    LOG_DBG("  title: %.*s", v.size(), v.data());
-    v = extract_value_str("subject"sv, sv);
-    LOG_DBG("subject: %.*s", v.size(), v.data());
-    v = extract_value_str("body"sv, sv);
-    LOG_DBG("   body: %.*s", v.size(), v.data());
-    v = extract_value_str("sender"sv, sv);
-    LOG_DBG(" sender: %.*s", v.size(), v.data());
+    dump_notify(sv);
     break;
   case NotifyRemove:
-    // v = extract_value_long("id"sv, sv);
-    // LOG_DBG("     id: %.*s".v.size(), v.data());
-    break;
-  case Weather:
-    LOG_DBG("%.*s", sv.size(), sv.data());
-    break;
-  case MusicInfo:
-    LOG_DBG("%.*s", sv.size(), sv.data());
-    break;
-  case MusicState:
-    LOG_DBG("%.*s", sv.size(), sv.data());
+    dump_notify_remove(sv);
     break;
   case Http:
-    v = extract_value_str("id"sv, sv);
-    LOG_DBG("     id: %.*s", v.size(), v.data());
-    v = extract_value_str("resp"sv, sv);
-    LOG_DBG("   resp: %.*s", v.size(), v.data());
-    v = extract_value_str("err"sv, sv);
-    LOG_DBG("    err: %.*s", v.size(), v.data());
-    break;
-  case IsGPSActive:
+    dump_http_resp(sv);
     break;
   default:
     LOG_DBG("%.*s", sv.size(), sv.data());
@@ -173,37 +246,9 @@ void parse(std::string_view sv)
 {
   if (sv.starts_with("GB("))
   {
+    sv = sv.substr(3, sv.size() - 4);
+    // LOG_DBG("%.*s", sv.size(), sv.data());
     dump_gb(sv);
-    // sv = sv.substr(4, sv.size() - 6);
-    // LOG_DBG("GB: %.*s", sv.size(), sv.data());
-    // auto skip = sizeof("\"t\":\"") - 1;
-    // switch (str_to_type(extract_value_str("t"sv, sv)))
-    // {
-    // case Notify:
-    //   LOG_DBG("Notify");
-    //   break;
-    // case NotifyRemove:
-    //   LOG_DBG("NotifyRemove");
-    //   break;
-    // case Weather:
-    //   LOG_DBG("Weather");
-    //   break;
-    // case MusicInfo:
-    //   LOG_DBG("MusicInfo");
-    //   break;
-    // case MusicState:
-    //   LOG_DBG("MusicState");
-    //   break;
-    // case Http:
-    //   LOG_DBG("Http");
-    //   break;
-    // case IsGPSActive:
-    //   LOG_DBG("IsGPSActive");
-    //   break;
-    // default:
-    //   LOG_DBG("Unknown");
-    //   break;
-    // }
   }
   else if (sv.starts_with("setTime("))
   {
