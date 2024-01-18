@@ -109,18 +109,47 @@ void dump_gb(std::string_view sv)
 {
   auto v = extract_value_str("t"sv, sv);
   LOG_DBG("      t: %.*s", v.size(), v.data());
-  // v = extract_value_long("id"sv, sv);
-  // LOG_DBG("     id: %.*s".v.size(), v.data());
-  v = extract_value_str("src"sv, sv);
-  LOG_DBG("    src: %.*s", v.size(), v.data());
-  v = extract_value_str("title"sv, sv);
-  LOG_DBG("  title: %.*s", v.size(), v.data());
-  v = extract_value_str("subject"sv, sv);
-  LOG_DBG("subject: %.*s", v.size(), v.data());
-  v = extract_value_str("body"sv, sv);
-  LOG_DBG("   body: %.*s", v.size(), v.data());
-  v = extract_value_str("sender"sv, sv);
-  LOG_DBG(" sender: %.*s", v.size(), v.data());
+  switch (str_to_type(extract_value_str("t"sv, sv)))
+  {
+  case Notify:
+    // v = extract_value_long("id"sv, sv);
+    // LOG_DBG("     id: %.*s".v.size(), v.data());
+    v = extract_value_str("src"sv, sv);
+    LOG_DBG("    src: %.*s", v.size(), v.data());
+    v = extract_value_str("title"sv, sv);
+    LOG_DBG("  title: %.*s", v.size(), v.data());
+    v = extract_value_str("subject"sv, sv);
+    LOG_DBG("subject: %.*s", v.size(), v.data());
+    v = extract_value_str("body"sv, sv);
+    LOG_DBG("   body: %.*s", v.size(), v.data());
+    v = extract_value_str("sender"sv, sv);
+    LOG_DBG(" sender: %.*s", v.size(), v.data());
+    break;
+  case NotifyRemove:
+    // v = extract_value_long("id"sv, sv);
+    // LOG_DBG("     id: %.*s".v.size(), v.data());
+    break;
+  case Weather:
+    LOG_DBG("%.*s", sv.size(), sv.data());
+    break;
+  case MusicInfo:
+    LOG_DBG("%.*s", sv.size(), sv.data());
+    break;
+  case MusicState:
+    LOG_DBG("%.*s", sv.size(), sv.data());
+    break;
+  case Http:
+    v = extract_value_str("resp"sv, sv);
+    LOG_DBG("   resp: %.*s", v.size(), v.data());
+    v = extract_value_str("err"sv, sv);
+    LOG_DBG("    err: %.*s", v.size(), v.data());
+    break;
+  case IsGPSActive:
+    break;
+  default:
+    LOG_DBG("%.*s", sv.size(), sv.data());
+    break;
+  }
 }
 
 void parse(std::string_view sv)

@@ -190,6 +190,7 @@ static void connected(bt_conn *conn, uint8_t err)
       bt_conn_disconnect(conn, BT_HCI_ERR_AUTH_FAIL);
       return;
     }
+    _connected = true;
   }
   else
   {
@@ -230,15 +231,6 @@ static void security_changed(bt_conn *conn, bt_security_t level, bt_security_err
     {
       // only start services if we have a secure connection
       bt::gatt_dm::start(conn);
-
-#ifdef CONFIG_BT_NUS
-      int err = bt::nus::init();
-      if (err)
-      {
-        LOG_ERR("Failed to enable NUS, err: %d", err);
-      }
-#endif
-      _connected = true;
     }
   }
 }
@@ -280,6 +272,14 @@ int bt::init()
     LOG_ERR("Failed to auth, err: %d", err);
     return err;
   }
+
+#ifdef CONFIG_BT_NUS
+  err = bt::nus::init();
+  if (err)
+  {
+    LOG_ERR("Failed to enable NUS, err: %d", err);
+  }
+#endif
 
   auto param = BT_LE_ADV_CONN_NAME[0];
 
