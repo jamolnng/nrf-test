@@ -40,7 +40,7 @@ void read_device_name_cb(bt::gap_client::gap_client *client, const void *data, u
     LOG_ERR("Cannot read device name: error: %d", err);
     return;
   }
-  LOG_DBG("%.*s", len, reinterpret_cast<const char *>(data));
+  LOG_INF("%.*s", len, reinterpret_cast<const char *>(data));
 }
 
 #define GB_HTTP_REQUEST "{\"t\":\"http\",\"id\":\"quiz\",\"url\":\"https://opentdb.com/api.php?amount=1&difficulty=easy&type=boolean\"} \n"
@@ -113,7 +113,7 @@ void run_send(k_work *item);
 K_WORK_DELAYABLE_DEFINE(send_work, run_send);
 void run_send(k_work *item)
 {
-  if (!bt::connected() || system::gadgetbridge::send_ver() || !bt::nus::can_send())
+  if (!bt::connected() || !bt::nus::can_send() || system::gadgetbridge::send_ver())
   {
     k_work_schedule(&send_work, K_MSEC(500));
   }
@@ -160,10 +160,19 @@ void run_batt(k_work *item)
   k_work_schedule(&batt_work, K_MSEC(1000));
 }
 
+void passkey_display(unsigned int passkey)
+{
+  LOG_INF("Passkey %06u", passkey);
+}
+bt::auth::auth_cb _auth_callbacks = {
+    .passkey_display = passkey_display,
+};
+
 void run_init(k_work *item)
 {
   dk_leds_init();
   bt::init();
+  bt::auth::set_callback(&_auth_callbacks);
   bt::auth::set_pairable(false);
   system::gadgetbridge::init();
 

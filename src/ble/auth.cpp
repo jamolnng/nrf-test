@@ -7,6 +7,8 @@ LOG_MODULE_REGISTER(bt_auth, CONFIG_NRF_TEST_BLE_LOG_LEVEL);
 
 // static bool pairing_enabled;
 
+bt::auth::auth_cb *auth_callbacks;
+
 static void passkey_display(bt_conn *conn, unsigned int passkey);
 static void pairing_accept(bt_conn *conn);
 static void pairing_deny(bt_conn *conn);
@@ -32,6 +34,11 @@ static void passkey_display(bt_conn *conn, unsigned int passkey)
   bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
   LOG_DBG("Passkey for %s: %06u", addr, passkey);
+
+  if (auth_callbacks && auth_callbacks->passkey_display)
+  {
+    auth_callbacks->passkey_display(passkey);
+  }
 }
 
 void auth_cancel(bt_conn *conn)
@@ -126,4 +133,12 @@ void bt::auth::set_pairable(bool pairable)
 bool bt::auth::pairable()
 {
   return auth_cb_display.pairing_confirm == pairing_accept;
+}
+
+void bt::auth::set_callback(auth_cb *cb)
+{
+  if (cb != nullptr)
+  {
+    auth_callbacks = cb;
+  }
 }

@@ -6,14 +6,14 @@
 // can't call it bt_nus since that's already in use :/
 LOG_MODULE_REGISTER(bt_app_nus, CONFIG_NRF_TEST_BLE_LOG_LEVEL);
 
-struct bt::nus::nus_cb *callbacks;
+bt::nus::nus_cb *nus_callbacks;
 bool _can_send = false;
 
 void data_received(bt_conn *conn, const uint8_t *const data, uint16_t len)
 {
-  if (callbacks != nullptr)
+  if (nus_callbacks != nullptr && nus_callbacks->receive)
   {
-    callbacks->receive(data, len);
+    nus_callbacks->receive(data, len);
   }
   // memset(tstr, 0, sizeof(tstr));
   // snprintf(tstr, sizeof(tstr), "%.*s", len, data);
@@ -62,9 +62,10 @@ void bt::nus::set_callback(nus_cb *cb)
 {
   if (cb != nullptr)
   {
-    callbacks = cb;
+    nus_callbacks = cb;
   }
 }
+
 bool bt::nus::can_send()
 {
   return _can_send;

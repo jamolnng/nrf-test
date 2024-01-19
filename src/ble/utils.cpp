@@ -39,36 +39,36 @@ constexpr std::array<std::string_view, 13> month_of_year = {
 void bt::current_time_print(bt_cts_current_time *current_time)
 {
   auto day = day_of_week[current_time->exact_time_256.day_of_week];
-  LOG_DBG("\tDay of week   %.*s", day.size(), day.data());
+  LOG_INF("\tDay of week   %.*s", day.size(), day.data());
 
   if (current_time->exact_time_256.day == 0)
   {
-    LOG_DBG("\tDay of month  Unknown");
+    LOG_INF("\tDay of month  Unknown");
   }
   else
   {
-    LOG_DBG("\tDay of month  %u", current_time->exact_time_256.day);
+    LOG_INF("\tDay of month  %u", current_time->exact_time_256.day);
   }
 
   auto month = month_of_year[current_time->exact_time_256.month];
-  LOG_DBG("\tMonth of year %.*s", month.size(), month.data());
+  LOG_INF("\tMonth of year %.*s", month.size(), month.data());
 
   if (current_time->exact_time_256.year == 0)
   {
-    LOG_DBG("\tYear          Unknown");
+    LOG_INF("\tYear          Unknown");
   }
   else
   {
-    LOG_DBG("\tYear          %u", current_time->exact_time_256.year);
+    LOG_INF("\tYear          %u", current_time->exact_time_256.year);
   }
-  LOG_DBG("\tTime:");
-  LOG_DBG("\tHours     %u", current_time->exact_time_256.hours);
-  LOG_DBG("\tMinutes   %u", current_time->exact_time_256.minutes);
-  LOG_DBG("\tSeconds   %u", current_time->exact_time_256.seconds);
+  LOG_INF("\tTime:");
+  LOG_INF("\tHours     %u", current_time->exact_time_256.hours);
+  LOG_INF("\tMinutes   %u", current_time->exact_time_256.minutes);
+  LOG_INF("\tSeconds   %u", current_time->exact_time_256.seconds);
 
-  LOG_DBG("\tAdjust reason:");
-  LOG_DBG("\tDaylight savings %x", current_time->adjust_reason.change_of_daylight_savings_time);
-  LOG_DBG("\tTime zone        %x", current_time->adjust_reason.change_of_time_zone);
-  LOG_DBG("\tExternal update  %x", current_time->adjust_reason.external_reference_time_update);
-  LOG_DBG("\tManual update    %x", current_time->adjust_reason.manual_time_update);
+  LOG_INF("\tAdjust reason:");
+  LOG_INF("\tDaylight savings %x", current_time->adjust_reason.change_of_daylight_savings_time);
+  LOG_INF("\tTime zone        %x", current_time->adjust_reason.change_of_time_zone);
+  LOG_INF("\tExternal update  %x", current_time->adjust_reason.external_reference_time_update);
+  LOG_INF("\tManual update    %x", current_time->adjust_reason.manual_time_update);
 }
