@@ -144,8 +144,8 @@ void run_batt(k_work *item)
     char buf[100];
 
     memset(buf, 0, sizeof(buf));
-    msg_len = snprintf(buf, sizeof(buf), "{\"t\":\"status\", \"bat\": %d, \"volt\": %d, \"chg\": %d} \n", batt,
-                       batt, dir == 1);
+    msg_len = snprintf(buf, sizeof(buf), "{\"t\":\"status\", \"bat\": %d, \"volt\": %.*f, \"chg\": %d} \n", batt,
+                       1, float(batt) / 30.0f, dir == 1);
     bt::nus::send(reinterpret_cast<uint8_t *>(buf), msg_len);
 
     if (batt == 50)
