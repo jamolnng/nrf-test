@@ -29,44 +29,72 @@ const json_obj_descr message_type_desc[] = {
 
 struct notify
 {
-  json_obj_token type;
+  // json_obj_token type;
   long id;
   json_obj_token title;
   json_obj_token subject;
   json_obj_token body;
   json_obj_token sender;
+  json_obj_token tel;
+
+  static const std::string_view type;
 };
+const std::string_view notify::type = "notify"sv;
 
 const json_obj_descr notify_desc[] = {
-    JSON_OBJ_DESCR_PRIM_NAMED(notify, "t", type, JSON_TOK_OPAQUE),
+    // JSON_OBJ_DESCR_PRIM_NAMED(notify, "t", type, JSON_TOK_OPAQUE),
     JSON_OBJ_DESCR_PRIM(notify, id, JSON_TOK_NUMBER),
     JSON_OBJ_DESCR_PRIM(notify, title, JSON_TOK_OPAQUE),
     JSON_OBJ_DESCR_PRIM(notify, subject, JSON_TOK_OPAQUE),
     JSON_OBJ_DESCR_PRIM(notify, body, JSON_TOK_OPAQUE),
     JSON_OBJ_DESCR_PRIM(notify, sender, JSON_TOK_OPAQUE),
+    JSON_OBJ_DESCR_PRIM(notify, tel, JSON_TOK_OPAQUE),
 };
 
 struct notify_remove
 {
-  json_obj_token type;
+  // json_obj_token type;
   long id;
+
+  static const std::string_view type;
 };
+const std::string_view notify_remove::type = "notify-"sv;
 
 const json_obj_descr notify_remove_desc[] = {
-    JSON_OBJ_DESCR_PRIM_NAMED(notify_remove, "t", type, JSON_TOK_OPAQUE),
+    // JSON_OBJ_DESCR_PRIM_NAMED(notify_remove, "t", type, JSON_TOK_OPAQUE),
     JSON_OBJ_DESCR_PRIM(notify_remove, id, JSON_TOK_NUMBER),
+};
+
+struct call
+{
+  json_obj_token cmd;
+  json_obj_token name;
+  json_obj_token number;
+
+  static const std::string_view type;
+};
+const std::string_view call::type = "call"sv;
+
+const json_obj_descr call_desc[] = {
+    // JSON_OBJ_DESCR_PRIM_NAMED(notify_remove, "t", type, JSON_TOK_OPAQUE),
+    JSON_OBJ_DESCR_PRIM(call, cmd, JSON_TOK_OPAQUE),
+    JSON_OBJ_DESCR_PRIM(call, name, JSON_TOK_OPAQUE),
+    JSON_OBJ_DESCR_PRIM(call, number, JSON_TOK_OPAQUE),
 };
 
 struct http_resp
 {
-  json_obj_token type;
+  // json_obj_token type;
   json_obj_token id;
   json_obj_token resp;
   json_obj_token err;
+
+  static const std::string_view type;
 };
+const std::string_view http_resp::type = "http"sv;
 
 const json_obj_descr http_resp_desc[] = {
-    JSON_OBJ_DESCR_PRIM_NAMED(http_resp, "t", type, JSON_TOK_OPAQUE),
+    // JSON_OBJ_DESCR_PRIM_NAMED(http_resp, "t", type, JSON_TOK_OPAQUE),
     JSON_OBJ_DESCR_PRIM(http_resp, id, JSON_TOK_OPAQUE),
     JSON_OBJ_DESCR_PRIM(http_resp, resp, JSON_TOK_OPAQUE),
     JSON_OBJ_DESCR_PRIM(http_resp, err, JSON_TOK_OPAQUE),
@@ -74,17 +102,20 @@ const json_obj_descr http_resp_desc[] = {
 
 struct musicinfo
 {
-  json_obj_token type;
+  // json_obj_token type;
   json_obj_token artist;
   json_obj_token album;
   json_obj_token track;
   int duration;
   int track_count;
   int track_number;
+
+  static const std::string_view type;
 };
+const std::string_view musicinfo::type = "musicinfo"sv;
 
 const json_obj_descr musicinfo_desc[] = {
-    JSON_OBJ_DESCR_PRIM_NAMED(musicinfo, "t", type, JSON_TOK_OPAQUE),
+    // JSON_OBJ_DESCR_PRIM_NAMED(musicinfo, "t", type, JSON_TOK_OPAQUE),
     JSON_OBJ_DESCR_PRIM(musicinfo, artist, JSON_TOK_OPAQUE),
     JSON_OBJ_DESCR_PRIM(musicinfo, album, JSON_TOK_OPAQUE),
     JSON_OBJ_DESCR_PRIM(musicinfo, track, JSON_TOK_OPAQUE),
@@ -95,15 +126,18 @@ const json_obj_descr musicinfo_desc[] = {
 
 struct musicstate
 {
-  json_obj_token type;
+  // json_obj_token type;
   json_obj_token state;
   int position;
   int shuffle;
   int repeat;
+
+  static const std::string_view type;
 };
+const std::string_view musicstate::type = "musicstate"sv;
 
 const json_obj_descr musicstate_desc[] = {
-    JSON_OBJ_DESCR_PRIM_NAMED(musicstate, "t", type, JSON_TOK_OPAQUE),
+    // JSON_OBJ_DESCR_PRIM_NAMED(musicstate, "t", type, JSON_TOK_OPAQUE),
     JSON_OBJ_DESCR_PRIM(musicstate, state, JSON_TOK_OPAQUE),
     JSON_OBJ_DESCR_PRIM(musicstate, position, JSON_TOK_NUMBER),
     JSON_OBJ_DESCR_PRIM(musicstate, shuffle, JSON_TOK_NUMBER),
@@ -122,14 +156,17 @@ enum Type
   Unknown,
   Notify,
   NotifyRemove,
+  Call,
   Weather,
   MusicInfo,
   MusicState,
   Http,
   Alarm,
   Find,
-  ActFetch,
+  ActivityFetch,
   IsGPSActive,
+  Vibrate,
+  Navigation,
 };
 
 // std::string_view extract_type(std::string_view data)
@@ -158,26 +195,32 @@ enum Type
 
 Type str_to_type(std::string_view sv)
 {
-  if (sv == "notify"sv)
+  if (sv == notify::type)
     return Notify;
-  if (sv == "notify-"sv)
+  if (sv == notify_remove::type)
     return NotifyRemove;
+  if (sv == call::type)
+    return Call;
   if (sv == "weather"sv)
     return Weather;
-  if (sv == "musicinfo"sv)
+  if (sv == musicinfo::type)
     return MusicInfo;
-  if (sv == "musicstate"sv)
+  if (sv == musicstate::type)
     return MusicState;
-  if (sv == "http"sv)
+  if (sv == http_resp::type)
     return Http;
   if (sv == "alarm"sv)
     return Alarm;
   if (sv == "find"sv)
     return Find;
   if (sv == "actfetch"sv)
-    return ActFetch;
+    return ActivityFetch;
   if (sv == "is_gps_active"sv)
     return IsGPSActive;
+  if (sv == "vibrate"sv)
+    return Vibrate;
+  if (sv == "nav"sv)
+    return Navigation;
   return Unknown;
 }
 
@@ -195,12 +238,19 @@ void dump_notify(std::string_view sv)
   }
   else
   {
-    LOG_DBG("   Type: %.*s", notif.type.length, notif.type.start);
-    LOG_DBG("     ID: %ld", notif.id);
-    LOG_DBG("  Title: %.*s", notif.title.length, notif.title.start);
-    LOG_DBG("Subject: %.*s", notif.subject.length, notif.subject.start);
-    LOG_DBG("   Body: %.*s", notif.body.length, notif.body.start);
-    LOG_DBG(" Sender: %.*s", notif.sender.length, notif.sender.start);
+    LOG_DBG("Notify:");
+    if (ret & 0b000001)
+      LOG_DBG("     ID: %ld", notif.id);
+    if (ret & 0b000010)
+      LOG_DBG("  Title: %.*s", notif.title.length, notif.title.start);
+    if (ret & 0b000100)
+      LOG_DBG("Subject: %.*s", notif.subject.length, notif.subject.start);
+    if (ret & 0b001000)
+      LOG_DBG("   Body: %.*s", notif.body.length, notif.body.start);
+    if (ret & 0b010000)
+      LOG_DBG(" Sender: %.*s", notif.sender.length, notif.sender.start);
+    if (ret & 0b100000)
+      LOG_DBG("    Tel: %.*s", notif.tel.length, notif.tel.start);
   }
 }
 
@@ -218,8 +268,33 @@ void dump_notify_remove(std::string_view sv)
   }
   else
   {
-    LOG_DBG("Type: %.*s", notif.type.length, notif.type.start);
-    LOG_DBG("  ID: %ld", notif.id);
+    LOG_DBG("Notify Remove:");
+    if (ret & 0b1)
+      LOG_DBG("  ID: %ld", notif.id);
+  }
+}
+
+void dump_call(std::string_view sv)
+{
+  call c;
+  int ret = json_obj_parse(const_cast<char *>(sv.data()),
+                           sv.size(),
+                           call_desc,
+                           ARRAY_SIZE(call_desc),
+                           &c);
+  if (ret < 0)
+  {
+    LOG_ERR("JSON parse error: %d", ret);
+  }
+  else
+  {
+    LOG_DBG("Call:");
+    if (ret & 0b001)
+      LOG_DBG("   CMD: %.*s", c.cmd.length, c.cmd.start);
+    if (ret & 0b010)
+      LOG_DBG("  Name: %.*s", c.name.length, c.name.start);
+    if (ret & 0b100)
+      LOG_DBG("Number: %.*s", c.number.length, c.number.start);
   }
 }
 
@@ -237,16 +312,13 @@ void dump_http_resp(std::string_view sv)
   }
   else
   {
-    LOG_DBG("Type: %.*s", resp.type.length, resp.type.start);
-    LOG_DBG("  ID: %.*s", resp.id.length, resp.id.start);
-    if (ret == 0x7)
-    {
+    LOG_DBG("HTTP Response:");
+    if (ret & 0b001)
+      LOG_DBG("  ID: %.*s", resp.id.length, resp.id.start);
+    if (ret & 0b010)
       LOG_DBG("Resp: %.*s", resp.resp.length, resp.resp.start);
-    }
-    if (ret == 0xB)
-    {
+    if (ret & 0b100)
       LOG_DBG(" Err: %.*s", resp.err.length, resp.err.start);
-    }
   }
 }
 
@@ -264,19 +336,18 @@ void dump_musicinfo(std::string_view sv)
   }
   else
   {
-    if (ret & 0b0000001)
-      LOG_DBG("        Type: %.*s", info.type.length, info.type.start);
-    if (ret & 0b0000010)
+    LOG_DBG("Music Info:");
+    if (ret & 0b000001)
       LOG_DBG("      Artist: %.*s", info.artist.length, info.artist.start);
-    if (ret & 0b0000100)
+    if (ret & 0b000010)
       LOG_DBG("       Album: %.*s", info.album.length, info.album.start);
-    if (ret & 0b0001000)
+    if (ret & 0b000100)
       LOG_DBG("       Track: %.*s", info.track.length, info.track.start);
-    if (ret & 0b0010000)
+    if (ret & 0b001000)
       LOG_DBG("    Duration: %d", info.duration);
-    if (ret & 0b0100000)
+    if (ret & 0b010000)
       LOG_DBG(" Track count: %d", info.track_count);
-    if (ret & 0b1000000)
+    if (ret & 0b100000)
       LOG_DBG("Track number: %d", info.track_number);
   }
 }
@@ -295,15 +366,14 @@ void dump_musicstate(std::string_view sv)
   }
   else
   {
-    if (ret & 0b00001)
-      LOG_DBG("    Type: %.*s", state.type.length, state.type.start);
-    if (ret & 0b00010)
+    LOG_DBG("Music State:");
+    if (ret & 0b0001)
       LOG_DBG("   State: %.*s", state.state.length, state.state.start);
-    if (ret & 0b00100)
+    if (ret & 0b0010)
       LOG_DBG("Position: %d", state.position);
-    if (ret & 0b01000)
+    if (ret & 0b0100)
       LOG_DBG(" Shuffle: %d", state.shuffle);
-    if (ret & 0b10000)
+    if (ret & 0b1000)
       LOG_DBG("  Repeat: %d", state.repeat);
   }
 }
@@ -351,6 +421,9 @@ void dump_gb(std::string_view sv)
     break;
   case NotifyRemove:
     dump_notify_remove(sv);
+    break;
+  case Call:
+    dump_call(sv);
     break;
   case Http:
     dump_http_resp(sv);
