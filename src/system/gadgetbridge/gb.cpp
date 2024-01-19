@@ -2,6 +2,7 @@
 
 #include "ble/nus.hpp"
 
+#include <zephyr/sys/base64.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/data/json.h>
 #include <zephyr/types.h>
@@ -93,29 +94,29 @@ enum Type
   IsGPSActive,
 };
 
-std::string_view extract_type(std::string_view data)
-{
-  static const auto key = "\"t\":\""sv;
-  size_t idx;
-  if ((idx = data.find(key)) != std::string_view::npos)
-  {
-    size_t start = idx, len = 0;
-    auto search = data.substr(idx + key.size());
-    while ((idx = search.find('"')) != std::string_view::npos)
-    {
-      if (idx == 0)
-        break;
-      len += idx;
-      if (search[idx - 1] != '\\')
-        break;
-      else
-        len++;
-      search = search.substr(idx + 1);
-    }
-    return data.substr(start + key.size()).substr(0, len);
-  }
-  return std::string_view{};
-}
+// std::string_view extract_type(std::string_view data)
+// {
+//   static const auto key = "\"t\":\""sv;
+//   size_t idx;
+//   if ((idx = data.find(key)) != std::string_view::npos)
+//   {
+//     size_t start = idx, len = 0;
+//     auto search = data.substr(idx + key.size());
+//     while ((idx = search.find('"')) != std::string_view::npos)
+//     {
+//       if (idx == 0)
+//         break;
+//       len += idx;
+//       if (search[idx - 1] != '\\')
+//         break;
+//       else
+//         len++;
+//       search = search.substr(idx + 1);
+//     }
+//     return data.substr(start + key.size()).substr(0, len);
+//   }
+//   return std::string_view{};
+// }
 
 Type str_to_type(std::string_view sv)
 {
@@ -211,8 +212,30 @@ void dump_http_resp(std::string_view sv)
   }
 }
 
+void base64_decode_in_place(std::string_view sv)
+{
+  auto end = sv.find(')');
+  auto decode = sv.substr(6, end - 7);
+  size_t decoded_length;
+  auto *out = reinterpret_cast<uint8_t *>(const_cast<char *>(sv.substr(1).data()));
+  base64_decode(out,
+                end,
+                &decoded_length,
+                reinterpret_cast<uint8_t *>(const_cast<char *>(decode.data())),
+                decode.size());
+  // json_escape(reinterpret_cast<char *>(out), &decoded_length, end);
+  memset(&out[decoded_length + 1], ' ', end - decoded_length - 1);
+  out[-1] = '"';
+  out[decoded_length] = '"';
+}
+
 void dump_gb(std::string_view sv)
 {
+  size_t idx;
+  while ((idx = sv.find("atob(\""sv)) != std::string_view::npos)
+  {
+    base64_decode_in_place(sv.substr(idx));
+  }
   message_type base;
   int ret = json_obj_parse(const_cast<char *>(sv.data()),
                            sv.size(),
@@ -247,7 +270,6 @@ void parse(std::string_view sv)
   if (sv.starts_with("GB("))
   {
     sv = sv.substr(3, sv.size() - 4);
-    // LOG_DBG("%.*s", sv.size(), sv.data());
     dump_gb(sv);
   }
   else if (sv.starts_with("setTime("))
