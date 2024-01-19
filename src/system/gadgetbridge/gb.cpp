@@ -72,6 +72,44 @@ const json_obj_descr http_resp_desc[] = {
     JSON_OBJ_DESCR_PRIM(http_resp, err, JSON_TOK_OPAQUE),
 };
 
+struct musicinfo
+{
+  json_obj_token type;
+  json_obj_token artist;
+  json_obj_token album;
+  json_obj_token track;
+  int duration;
+  int track_count;
+  int track_number;
+};
+
+const json_obj_descr musicinfo_desc[] = {
+    JSON_OBJ_DESCR_PRIM_NAMED(musicinfo, "t", type, JSON_TOK_OPAQUE),
+    JSON_OBJ_DESCR_PRIM(musicinfo, artist, JSON_TOK_OPAQUE),
+    JSON_OBJ_DESCR_PRIM(musicinfo, album, JSON_TOK_OPAQUE),
+    JSON_OBJ_DESCR_PRIM(musicinfo, track, JSON_TOK_OPAQUE),
+    JSON_OBJ_DESCR_PRIM_NAMED(musicinfo, "dur", duration, JSON_TOK_NUMBER),
+    JSON_OBJ_DESCR_PRIM_NAMED(musicinfo, "c", track_count, JSON_TOK_NUMBER),
+    JSON_OBJ_DESCR_PRIM_NAMED(musicinfo, "n", track_number, JSON_TOK_NUMBER),
+};
+
+struct musicstate
+{
+  json_obj_token type;
+  json_obj_token state;
+  int position;
+  int shuffle;
+  int repeat;
+};
+
+const json_obj_descr musicstate_desc[] = {
+    JSON_OBJ_DESCR_PRIM_NAMED(musicstate, "t", type, JSON_TOK_OPAQUE),
+    JSON_OBJ_DESCR_PRIM(musicstate, state, JSON_TOK_OPAQUE),
+    JSON_OBJ_DESCR_PRIM(musicstate, position, JSON_TOK_NUMBER),
+    JSON_OBJ_DESCR_PRIM(musicstate, shuffle, JSON_TOK_NUMBER),
+    JSON_OBJ_DESCR_PRIM(musicstate, repeat, JSON_TOK_NUMBER),
+};
+
 enum State
 {
   None,
@@ -212,6 +250,64 @@ void dump_http_resp(std::string_view sv)
   }
 }
 
+void dump_musicinfo(std::string_view sv)
+{
+  musicinfo info;
+  int ret = json_obj_parse(const_cast<char *>(sv.data()),
+                           sv.size(),
+                           musicinfo_desc,
+                           ARRAY_SIZE(musicinfo_desc),
+                           &info);
+  if (ret < 0)
+  {
+    LOG_ERR("JSON parse error: %d", ret);
+  }
+  else
+  {
+    if (ret & 0b0000001)
+      LOG_DBG("        Type: %.*s", info.type.length, info.type.start);
+    if (ret & 0b0000010)
+      LOG_DBG("      Artist: %.*s", info.artist.length, info.artist.start);
+    if (ret & 0b0000100)
+      LOG_DBG("       Album: %.*s", info.album.length, info.album.start);
+    if (ret & 0b0001000)
+      LOG_DBG("       Track: %.*s", info.track.length, info.track.start);
+    if (ret & 0b0010000)
+      LOG_DBG("    Duration: %d", info.duration);
+    if (ret & 0b0100000)
+      LOG_DBG(" Track count: %d", info.track_count);
+    if (ret & 0b1000000)
+      LOG_DBG("Track number: %d", info.track_number);
+  }
+}
+
+void dump_musicstate(std::string_view sv)
+{
+  musicstate state;
+  int ret = json_obj_parse(const_cast<char *>(sv.data()),
+                           sv.size(),
+                           musicstate_desc,
+                           ARRAY_SIZE(musicstate_desc),
+                           &state);
+  if (ret < 0)
+  {
+    LOG_ERR("JSON parse error: %d", ret);
+  }
+  else
+  {
+    if (ret & 0b00001)
+      LOG_DBG("    Type: %.*s", state.type.length, state.type.start);
+    if (ret & 0b00010)
+      LOG_DBG("   State: %.*s", state.state.length, state.state.start);
+    if (ret & 0b00100)
+      LOG_DBG("Position: %d", state.position);
+    if (ret & 0b01000)
+      LOG_DBG(" Shuffle: %d", state.shuffle);
+    if (ret & 0b10000)
+      LOG_DBG("  Repeat: %d", state.repeat);
+  }
+}
+
 void base64_decode_in_place(std::string_view sv)
 {
   auto end = sv.find(')');
@@ -258,6 +354,12 @@ void dump_gb(std::string_view sv)
     break;
   case Http:
     dump_http_resp(sv);
+    break;
+  case MusicInfo:
+    dump_musicinfo(sv);
+    break;
+  case MusicState:
+    dump_musicstate(sv);
     break;
   default:
     LOG_DBG("%.*s", sv.size(), sv.data());
