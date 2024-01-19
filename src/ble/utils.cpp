@@ -2,36 +2,44 @@
 
 #include <zephyr/logging/log.h>
 
-LOG_MODULE_REGISTER(bt_utils, CONFIG_NRF_TEST_BLE_LOG_LEVEL);
+#include <array>
+#include <string_view>
 
-static const char *day_of_week[] = {
-    "Unknown",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday"};
+using namespace std::string_view_literals;
 
-static const char *month_of_year[] = {
-    "Unknown",
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December"};
+LOG_MODULE_REGISTER(bt_utils, CONFIG_NRF_TEST_LOG_LEVEL);
+
+constexpr std::array<std::string_view, 8> day_of_week = {
+    "Unknown"sv,
+    "Monday"sv,
+    "Tuesday"sv,
+    "Wednesday"sv,
+    "Thursday"sv,
+    "Friday"sv,
+    "Saturday"sv,
+    "Sunday"sv,
+};
+
+constexpr std::array<std::string_view, 13> month_of_year = {
+    "Unknown"sv,
+    "January"sv,
+    "February"sv,
+    "March"sv,
+    "April"sv,
+    "May"sv,
+    "June"sv,
+    "July"sv,
+    "August"sv,
+    "September"sv,
+    "October"sv,
+    "November"sv,
+    "December"sv,
+};
 
 void bt::current_time_print(bt_cts_current_time *current_time)
 {
-  LOG_DBG("\tDay of week   %s", day_of_week[current_time->exact_time_256.day_of_week]);
+  auto day = day_of_week[current_time->exact_time_256.day_of_week];
+  LOG_DBG("\tDay of week   %.*s", day.size(), day.data());
 
   if (current_time->exact_time_256.day == 0)
   {
@@ -42,7 +50,8 @@ void bt::current_time_print(bt_cts_current_time *current_time)
     LOG_DBG("\tDay of month  %u", current_time->exact_time_256.day);
   }
 
-  LOG_DBG("\tMonth of year %s", month_of_year[current_time->exact_time_256.month]);
+  auto month = month_of_year[current_time->exact_time_256.month];
+  LOG_DBG("\tMonth of year %.*s", month.size(), month.data());
 
   if (current_time->exact_time_256.year == 0)
   {
