@@ -29,7 +29,6 @@ const json_obj_descr message_type_desc[] = {
 
 struct notify
 {
-  // json_obj_token type;
   long id;
   json_obj_token title;
   json_obj_token subject;
@@ -37,12 +36,10 @@ struct notify
   json_obj_token sender;
   json_obj_token tel;
 
-  static const std::string_view type;
+  static constexpr std::string_view type = "notify"sv;
 };
-const std::string_view notify::type = "notify"sv;
 
 const json_obj_descr notify_desc[] = {
-    // JSON_OBJ_DESCR_PRIM_NAMED(notify, "t", type, JSON_TOK_OPAQUE),
     JSON_OBJ_DESCR_PRIM(notify, id, JSON_TOK_NUMBER),
     JSON_OBJ_DESCR_PRIM(notify, title, JSON_TOK_OPAQUE),
     JSON_OBJ_DESCR_PRIM(notify, subject, JSON_TOK_OPAQUE),
@@ -53,15 +50,12 @@ const json_obj_descr notify_desc[] = {
 
 struct notify_remove
 {
-  // json_obj_token type;
   long id;
 
-  static const std::string_view type;
+  static constexpr std::string_view type = "notify-"sv;
 };
-const std::string_view notify_remove::type = "notify-"sv;
 
 const json_obj_descr notify_remove_desc[] = {
-    // JSON_OBJ_DESCR_PRIM_NAMED(notify_remove, "t", type, JSON_TOK_OPAQUE),
     JSON_OBJ_DESCR_PRIM(notify_remove, id, JSON_TOK_NUMBER),
 };
 
@@ -71,12 +65,10 @@ struct call
   json_obj_token name;
   json_obj_token number;
 
-  static const std::string_view type;
+  static constexpr std::string_view type = "call"sv;
 };
-const std::string_view call::type = "call"sv;
 
 const json_obj_descr call_desc[] = {
-    // JSON_OBJ_DESCR_PRIM_NAMED(notify_remove, "t", type, JSON_TOK_OPAQUE),
     JSON_OBJ_DESCR_PRIM(call, cmd, JSON_TOK_OPAQUE),
     JSON_OBJ_DESCR_PRIM(call, name, JSON_TOK_OPAQUE),
     JSON_OBJ_DESCR_PRIM(call, number, JSON_TOK_OPAQUE),
@@ -84,17 +76,14 @@ const json_obj_descr call_desc[] = {
 
 struct http_resp
 {
-  // json_obj_token type;
   json_obj_token id;
   json_obj_token resp;
   json_obj_token err;
 
-  static const std::string_view type;
+  static constexpr std::string_view type = "http"sv;
 };
-const std::string_view http_resp::type = "http"sv;
 
 const json_obj_descr http_resp_desc[] = {
-    // JSON_OBJ_DESCR_PRIM_NAMED(http_resp, "t", type, JSON_TOK_OPAQUE),
     JSON_OBJ_DESCR_PRIM(http_resp, id, JSON_TOK_OPAQUE),
     JSON_OBJ_DESCR_PRIM(http_resp, resp, JSON_TOK_OPAQUE),
     JSON_OBJ_DESCR_PRIM(http_resp, err, JSON_TOK_OPAQUE),
@@ -102,7 +91,6 @@ const json_obj_descr http_resp_desc[] = {
 
 struct musicinfo
 {
-  // json_obj_token type;
   json_obj_token artist;
   json_obj_token album;
   json_obj_token track;
@@ -110,12 +98,10 @@ struct musicinfo
   int track_count;
   int track_number;
 
-  static const std::string_view type;
+  static constexpr std::string_view type = "musicinfo"sv;
 };
-const std::string_view musicinfo::type = "musicinfo"sv;
 
 const json_obj_descr musicinfo_desc[] = {
-    // JSON_OBJ_DESCR_PRIM_NAMED(musicinfo, "t", type, JSON_TOK_OPAQUE),
     JSON_OBJ_DESCR_PRIM(musicinfo, artist, JSON_TOK_OPAQUE),
     JSON_OBJ_DESCR_PRIM(musicinfo, album, JSON_TOK_OPAQUE),
     JSON_OBJ_DESCR_PRIM(musicinfo, track, JSON_TOK_OPAQUE),
@@ -126,18 +112,15 @@ const json_obj_descr musicinfo_desc[] = {
 
 struct musicstate
 {
-  // json_obj_token type;
   json_obj_token state;
   int position;
   int shuffle;
   int repeat;
 
-  static const std::string_view type;
+  static constexpr std::string_view type = "musicstate"sv;
 };
-const std::string_view musicstate::type = "musicstate"sv;
 
 const json_obj_descr musicstate_desc[] = {
-    // JSON_OBJ_DESCR_PRIM_NAMED(musicstate, "t", type, JSON_TOK_OPAQUE),
     JSON_OBJ_DESCR_PRIM(musicstate, state, JSON_TOK_OPAQUE),
     JSON_OBJ_DESCR_PRIM(musicstate, position, JSON_TOK_NUMBER),
     JSON_OBJ_DESCR_PRIM(musicstate, shuffle, JSON_TOK_NUMBER),
@@ -520,8 +503,8 @@ void system::gadgetbridge::init()
 
 int system::gadgetbridge::send_ver()
 {
-  std::string_view sv("{\"t\":\"ver\","
-                      "\"fw\":\"" CONFIG_BT_DIS_FW_REV_STR "\","
-                      "\"hw\":\"" CONFIG_BT_DIS_HW_REV_STR "\"}");
+  constexpr std::string_view sv("{\"t\":\"ver\","
+                                "\"fw\":\"" CONFIG_BT_DIS_FW_REV_STR "\","
+                                "\"hw\":\"" CONFIG_BT_DIS_HW_REV_STR "\"}");
   return bt::nus::send(reinterpret_cast<const uint8_t *>(sv.data()), sv.length());
 }
