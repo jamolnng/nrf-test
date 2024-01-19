@@ -18,8 +18,6 @@
 #include "ble/bas.hpp"
 #endif
 
-#include "system/gadgetbridge/gb.hpp"
-
 #include <zephyr/bluetooth/bluetooth.h>
 #include <zephyr/bluetooth/conn.h>
 #include <zephyr/bluetooth/uuid.h>

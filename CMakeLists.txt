@@ -15,8 +15,7 @@ target_sources(app PRIVATE
   src/ble/nus.cpp
   src/ble/utils.cpp
   src/ble/services/gap_client.cpp
-
-  src/system/gadgetbridge/gb.cpp
+  src/ble/services/gadgetbridge.cpp
 
   src/main.cpp
 )

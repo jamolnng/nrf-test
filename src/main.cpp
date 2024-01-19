@@ -6,7 +6,7 @@
 #include "ble/nus.hpp"
 #include "ble/utils.hpp"
 
-#include "system/gadgetbridge/gb.hpp"
+#include "ble/services/gadgetbridge.hpp"
 
 #include <zephyr/kernel.h>
 #include <zephyr/input/input.h>

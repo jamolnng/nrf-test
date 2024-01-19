@@ -1,4 +1,4 @@
-#include "system/gadgetbridge/gb.hpp"
+#include "ble/services/gadgetbridge.hpp"
 
 #include "ble/nus.hpp"
 
