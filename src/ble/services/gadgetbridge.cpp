@@ -7,8 +7,9 @@
 #include <zephyr/data/json.h>
 #include <zephyr/types.h>
 
-#include <string_view>
 #include <array>
+#include <string_view>
+#include <map>
 
 LOG_MODULE_REGISTER(gadgetbridge, CONFIG_NRF_TEST_LOG_LEVEL);
 
@@ -21,10 +22,10 @@ size_t recv_pos;
 struct message_type
 {
   json_obj_token type;
+  static const std::array<json_obj_descr, 1> desc;
 };
-
-const json_obj_descr message_type_desc[] = {
-    JSON_OBJ_DESCR_PRIM_NAMED(message_type, "t", type, JSON_TOK_OPAQUE),
+const std::array<json_obj_descr, 1> message_type::desc = {
+    json_obj_descr JSON_OBJ_DESCR_PRIM_NAMED(message_type, "t", type, JSON_TOK_OPAQUE),
 };
 
 struct notify
@@ -37,15 +38,15 @@ struct notify
   json_obj_token tel;
 
   static constexpr std::string_view type = "notify"sv;
+  static const std::array<json_obj_descr, 6> desc;
 };
-
-const json_obj_descr notify_desc[] = {
-    JSON_OBJ_DESCR_PRIM(notify, id, JSON_TOK_NUMBER),
-    JSON_OBJ_DESCR_PRIM(notify, title, JSON_TOK_OPAQUE),
-    JSON_OBJ_DESCR_PRIM(notify, subject, JSON_TOK_OPAQUE),
-    JSON_OBJ_DESCR_PRIM(notify, body, JSON_TOK_OPAQUE),
-    JSON_OBJ_DESCR_PRIM(notify, sender, JSON_TOK_OPAQUE),
-    JSON_OBJ_DESCR_PRIM(notify, tel, JSON_TOK_OPAQUE),
+const std::array<json_obj_descr, 6> notify::desc = {
+    json_obj_descr JSON_OBJ_DESCR_PRIM(notify, id, JSON_TOK_NUMBER),
+    json_obj_descr JSON_OBJ_DESCR_PRIM(notify, title, JSON_TOK_OPAQUE),
+    json_obj_descr JSON_OBJ_DESCR_PRIM(notify, subject, JSON_TOK_OPAQUE),
+    json_obj_descr JSON_OBJ_DESCR_PRIM(notify, body, JSON_TOK_OPAQUE),
+    json_obj_descr JSON_OBJ_DESCR_PRIM(notify, sender, JSON_TOK_OPAQUE),
+    json_obj_descr JSON_OBJ_DESCR_PRIM(notify, tel, JSON_TOK_OPAQUE),
 };
 
 struct notify_remove
@@ -53,10 +54,10 @@ struct notify_remove
   long id;
 
   static constexpr std::string_view type = "notify-"sv;
+  static const std::array<json_obj_descr, 1> desc;
 };
-
-const json_obj_descr notify_remove_desc[] = {
-    JSON_OBJ_DESCR_PRIM(notify_remove, id, JSON_TOK_NUMBER),
+const std::array<json_obj_descr, 1> notify_remove::desc = {
+    json_obj_descr JSON_OBJ_DESCR_PRIM(notify_remove, id, JSON_TOK_NUMBER),
 };
 
 struct call
@@ -66,12 +67,12 @@ struct call
   json_obj_token number;
 
   static constexpr std::string_view type = "call"sv;
+  static const std::array<json_obj_descr, 3> desc;
 };
-
-const json_obj_descr call_desc[] = {
-    JSON_OBJ_DESCR_PRIM(call, cmd, JSON_TOK_OPAQUE),
-    JSON_OBJ_DESCR_PRIM(call, name, JSON_TOK_OPAQUE),
-    JSON_OBJ_DESCR_PRIM(call, number, JSON_TOK_OPAQUE),
+const std::array<json_obj_descr, 3> call::desc = {
+    json_obj_descr JSON_OBJ_DESCR_PRIM(call, cmd, JSON_TOK_OPAQUE),
+    json_obj_descr JSON_OBJ_DESCR_PRIM(call, name, JSON_TOK_OPAQUE),
+    json_obj_descr JSON_OBJ_DESCR_PRIM(call, number, JSON_TOK_OPAQUE),
 };
 
 struct http_resp
@@ -81,12 +82,12 @@ struct http_resp
   json_obj_token err;
 
   static constexpr std::string_view type = "http"sv;
+  static const std::array<json_obj_descr, 3> desc;
 };
-
-const json_obj_descr http_resp_desc[] = {
-    JSON_OBJ_DESCR_PRIM(http_resp, id, JSON_TOK_OPAQUE),
-    JSON_OBJ_DESCR_PRIM(http_resp, resp, JSON_TOK_OPAQUE),
-    JSON_OBJ_DESCR_PRIM(http_resp, err, JSON_TOK_OPAQUE),
+const std::array<json_obj_descr, 3> http_resp::desc = {
+    json_obj_descr JSON_OBJ_DESCR_PRIM(http_resp, id, JSON_TOK_OPAQUE),
+    json_obj_descr JSON_OBJ_DESCR_PRIM(http_resp, resp, JSON_TOK_OPAQUE),
+    json_obj_descr JSON_OBJ_DESCR_PRIM(http_resp, err, JSON_TOK_OPAQUE),
 };
 
 struct musicinfo
@@ -99,15 +100,15 @@ struct musicinfo
   int track_number;
 
   static constexpr std::string_view type = "musicinfo"sv;
+  static const std::array<json_obj_descr, 6> desc;
 };
-
-const json_obj_descr musicinfo_desc[] = {
-    JSON_OBJ_DESCR_PRIM(musicinfo, artist, JSON_TOK_OPAQUE),
-    JSON_OBJ_DESCR_PRIM(musicinfo, album, JSON_TOK_OPAQUE),
-    JSON_OBJ_DESCR_PRIM(musicinfo, track, JSON_TOK_OPAQUE),
-    JSON_OBJ_DESCR_PRIM_NAMED(musicinfo, "dur", duration, JSON_TOK_NUMBER),
-    JSON_OBJ_DESCR_PRIM_NAMED(musicinfo, "c", track_count, JSON_TOK_NUMBER),
-    JSON_OBJ_DESCR_PRIM_NAMED(musicinfo, "n", track_number, JSON_TOK_NUMBER),
+const std::array<json_obj_descr, 6> musicinfo::desc = {
+    json_obj_descr JSON_OBJ_DESCR_PRIM(musicinfo, artist, JSON_TOK_OPAQUE),
+    json_obj_descr JSON_OBJ_DESCR_PRIM(musicinfo, album, JSON_TOK_OPAQUE),
+    json_obj_descr JSON_OBJ_DESCR_PRIM(musicinfo, track, JSON_TOK_OPAQUE),
+    json_obj_descr JSON_OBJ_DESCR_PRIM_NAMED(musicinfo, "dur", duration, JSON_TOK_NUMBER),
+    json_obj_descr JSON_OBJ_DESCR_PRIM_NAMED(musicinfo, "c", track_count, JSON_TOK_NUMBER),
+    json_obj_descr JSON_OBJ_DESCR_PRIM_NAMED(musicinfo, "n", track_number, JSON_TOK_NUMBER),
 };
 
 struct musicstate
@@ -118,13 +119,13 @@ struct musicstate
   int repeat;
 
   static constexpr std::string_view type = "musicstate"sv;
+  static const std::array<json_obj_descr, 4> desc;
 };
-
-const json_obj_descr musicstate_desc[] = {
-    JSON_OBJ_DESCR_PRIM(musicstate, state, JSON_TOK_OPAQUE),
-    JSON_OBJ_DESCR_PRIM(musicstate, position, JSON_TOK_NUMBER),
-    JSON_OBJ_DESCR_PRIM(musicstate, shuffle, JSON_TOK_NUMBER),
-    JSON_OBJ_DESCR_PRIM(musicstate, repeat, JSON_TOK_NUMBER),
+const std::array<json_obj_descr, 4> musicstate::desc = {
+    json_obj_descr JSON_OBJ_DESCR_PRIM(musicstate, state, JSON_TOK_OPAQUE),
+    json_obj_descr JSON_OBJ_DESCR_PRIM(musicstate, position, JSON_TOK_NUMBER),
+    json_obj_descr JSON_OBJ_DESCR_PRIM(musicstate, shuffle, JSON_TOK_NUMBER),
+    json_obj_descr JSON_OBJ_DESCR_PRIM(musicstate, repeat, JSON_TOK_NUMBER),
 };
 
 enum State
@@ -137,88 +138,54 @@ enum State
 enum Type
 {
   Unknown,
-  Notify,
-  NotifyRemove,
-  Call,
-  Weather,
-  MusicInfo,
-  MusicState,
-  Http,
-  Alarm,
-  Find,
-  ActivityFetch,
-  IsGPSActive,
-  Vibrate,
-  Navigation,
+  Notify,        // notify
+  NotifyRemove,  // notify-
+  Call,          // call
+  Weather,       // weather
+  MusicInfo,     // musicinfo
+  MusicState,    // musicstate
+  Http,          // http
+  Alarm,         // alarm
+  Find,          // find
+  ActivityFetch, // actfetch
+  IsGPSActive,   // is_gps_active
+  Vibrate,       // vibrate
+  Navigation,    // nav
 };
 
-// std::string_view extract_type(std::string_view data)
-// {
-//   static const auto key = "\"t\":\""sv;
-//   size_t idx;
-//   if ((idx = data.find(key)) != std::string_view::npos)
-//   {
-//     size_t start = idx, len = 0;
-//     auto search = data.substr(idx + key.size());
-//     while ((idx = search.find('"')) != std::string_view::npos)
-//     {
-//       if (idx == 0)
-//         break;
-//       len += idx;
-//       if (search[idx - 1] != '\\')
-//         break;
-//       else
-//         len++;
-//       search = search.substr(idx + 1);
-//     }
-//     return data.substr(start + key.size()).substr(0, len);
-//   }
-//   return std::string_view{};
-// }
+const std::map<std::string_view, Type> type_map = {
+    {notify::type, Notify},
+    {notify_remove::type, NotifyRemove},
+    {call::type, Call},
+    {musicinfo::type, MusicInfo},
+    {musicstate::type, MusicState},
+    {http_resp::type, Http},
+};
 
 Type str_to_type(std::string_view sv)
 {
-  if (sv == notify::type)
-    return Notify;
-  if (sv == notify_remove::type)
-    return NotifyRemove;
-  if (sv == call::type)
-    return Call;
-  if (sv == "weather"sv)
-    return Weather;
-  if (sv == musicinfo::type)
-    return MusicInfo;
-  if (sv == musicstate::type)
-    return MusicState;
-  if (sv == http_resp::type)
-    return Http;
-  if (sv == "alarm"sv)
-    return Alarm;
-  if (sv == "find"sv)
-    return Find;
-  if (sv == "actfetch"sv)
-    return ActivityFetch;
-  if (sv == "is_gps_active"sv)
-    return IsGPSActive;
-  if (sv == "vibrate"sv)
-    return Vibrate;
-  if (sv == "nav"sv)
-    return Navigation;
+  auto t = type_map.find(sv);
+  if (t != type_map.end())
+    return t->second;
   return Unknown;
+}
+
+template <typename T>
+int from_json(std::string_view sv, T *t)
+{
+  return json_obj_parse(const_cast<char *>(sv.data()),
+                        sv.size(),
+                        T::desc.data(),
+                        T::desc.size(),
+                        t);
 }
 
 void dump_notify(std::string_view sv)
 {
   notify notif;
-  int ret = json_obj_parse(const_cast<char *>(sv.data()),
-                           sv.size(),
-                           notify_desc,
-                           ARRAY_SIZE(notify_desc),
-                           &notif);
+  int ret = from_json(sv, &notif);
   if (ret < 0)
-  {
     LOG_ERR("JSON parse error: %d", ret);
-  }
   else
   {
     LOG_DBG("Notify:");
@@ -240,35 +207,23 @@ void dump_notify(std::string_view sv)
 void dump_notify_remove(std::string_view sv)
 {
   notify_remove notif;
-  int ret = json_obj_parse(const_cast<char *>(sv.data()),
-                           sv.size(),
-                           notify_remove_desc,
-                           ARRAY_SIZE(notify_remove_desc),
-                           &notif);
+  int ret = from_json(sv, &notif);
   if (ret < 0)
-  {
     LOG_ERR("JSON parse error: %d", ret);
-  }
   else
   {
     LOG_DBG("Notify Remove:");
     if (ret & 0b1)
-      LOG_DBG("  ID: %ld", notif.id);
+      LOG_DBG("ID: %ld", notif.id);
   }
 }
 
 void dump_call(std::string_view sv)
 {
   call c;
-  int ret = json_obj_parse(const_cast<char *>(sv.data()),
-                           sv.size(),
-                           call_desc,
-                           ARRAY_SIZE(call_desc),
-                           &c);
+  int ret = from_json(sv, &c);
   if (ret < 0)
-  {
     LOG_ERR("JSON parse error: %d", ret);
-  }
   else
   {
     LOG_DBG("Call:");
@@ -284,15 +239,9 @@ void dump_call(std::string_view sv)
 void dump_http_resp(std::string_view sv)
 {
   http_resp resp;
-  int ret = json_obj_parse(const_cast<char *>(sv.data()),
-                           sv.size(),
-                           http_resp_desc,
-                           ARRAY_SIZE(http_resp_desc),
-                           &resp);
+  int ret = from_json(sv, &resp);
   if (ret < 0)
-  {
     LOG_ERR("JSON parse error: %d", ret);
-  }
   else
   {
     LOG_DBG("HTTP Response:");
@@ -308,15 +257,9 @@ void dump_http_resp(std::string_view sv)
 void dump_musicinfo(std::string_view sv)
 {
   musicinfo info;
-  int ret = json_obj_parse(const_cast<char *>(sv.data()),
-                           sv.size(),
-                           musicinfo_desc,
-                           ARRAY_SIZE(musicinfo_desc),
-                           &info);
+  int ret = from_json(sv, &info);
   if (ret < 0)
-  {
     LOG_ERR("JSON parse error: %d", ret);
-  }
   else
   {
     LOG_DBG("Music Info:");
@@ -338,15 +281,9 @@ void dump_musicinfo(std::string_view sv)
 void dump_musicstate(std::string_view sv)
 {
   musicstate state;
-  int ret = json_obj_parse(const_cast<char *>(sv.data()),
-                           sv.size(),
-                           musicstate_desc,
-                           ARRAY_SIZE(musicstate_desc),
-                           &state);
+  int ret = from_json(sv, &state);
   if (ret < 0)
-  {
     LOG_ERR("JSON parse error: %d", ret);
-  }
   else
   {
     LOG_DBG("Music State:");
@@ -386,11 +323,7 @@ void dump_gb(std::string_view sv)
     base64_decode_in_place(sv.substr(idx));
   }
   message_type base;
-  int ret = json_obj_parse(const_cast<char *>(sv.data()),
-                           sv.size(),
-                           message_type_desc,
-                           ARRAY_SIZE(message_type_desc),
-                           &base);
+  int ret = from_json(sv, &base);
   auto type_str = std::string_view(base.type.start, base.type.length);
   if (ret < 0)
   {
