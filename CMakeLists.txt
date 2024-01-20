@@ -16,6 +16,8 @@ target_sources(app PRIVATE
   src/ble/utils.cpp
   src/ble/services/gap_client.cpp
   src/ble/services/gadgetbridge.cpp
+  src/ble/services/gadgetbridge/gb_parse.cpp
+  src/ble/services/gadgetbridge/st_parse.cpp
 
   src/main.cpp
 )

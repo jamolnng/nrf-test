@@ -58,7 +58,7 @@ int bt::nus::send(const uint8_t *data, uint16_t len)
   return 0;
 }
 
-void bt::nus::set_callback(nus_cb *cb)
+void bt::nus::set_callback(bt::nus::nus_cb *cb)
 {
   if (cb != nullptr)
   {
