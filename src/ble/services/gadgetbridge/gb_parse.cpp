@@ -9,7 +9,7 @@ using namespace std::string_view_literals;
 
 LOG_MODULE_REGISTER(gadgetbridge_gb_parse, CONFIG_NRF_TEST_LOG_LEVEL);
 
-using namespace system::gadgetbridge;
+using namespace services::gadgetbridge;
 
 const std::array<json_obj_descr, 1> message_type::desc = {
     json_obj_descr JSON_OBJ_DESCR_PRIM_NAMED(message_type, "t", type, JSON_TOK_OPAQUE),
@@ -59,7 +59,7 @@ const std::map<std::string_view, MessageType> type_map = {
     {http_message::type, Http},
 };
 
-MessageType system::gadgetbridge::str_to_type(std::string_view sv)
+MessageType services::gadgetbridge::str_to_type(std::string_view sv)
 {
   auto t = type_map.find(sv);
   if (t != type_map.end())
@@ -225,7 +225,7 @@ void dump_gb(std::string_view sv)
     LOG_ERR("JSON decode error: %d", ret);
     return;
   }
-  switch (system::gadgetbridge::str_to_type(type_str))
+  switch (services::gadgetbridge::str_to_type(type_str))
   {
   case Notify:
     dump_notify(sv);
@@ -251,7 +251,8 @@ void dump_gb(std::string_view sv)
   }
 }
 
-void system::gadgetbridge::gb_parse(std::string_view sv)
+void services::gadgetbridge::gb_parse(std::string_view sv)
 {
+  sv = sv.substr(3, sv.size() - 4);
   dump_gb(sv);
 }

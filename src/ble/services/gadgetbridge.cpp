@@ -28,12 +28,11 @@ void parse(std::string_view sv)
 {
   if (sv.starts_with("GB("))
   {
-    sv = sv.substr(3, sv.size() - 4);
-    system::gadgetbridge::gb_parse(sv);
+    services::gadgetbridge::gb_parse(sv);
   }
   else if (sv.starts_with("setTime("))
   {
-    system::gadgetbridge::st_parse(sv);
+    services::gadgetbridge::st_parse(sv);
   }
 }
 

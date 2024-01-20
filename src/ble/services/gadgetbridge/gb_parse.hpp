@@ -5,7 +5,7 @@
 #include <array>
 #include <string_view>
 
-namespace system
+namespace services
 {
   namespace gadgetbridge
   {
