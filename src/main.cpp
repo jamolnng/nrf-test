@@ -16,6 +16,8 @@
 #include <zephyr/bluetooth/conn.h>
 #include <zephyr/sys/reboot.h>
 
+#include <ctime>
+
 LOG_MODULE_REGISTER(main, CONFIG_NRF_TEST_LOG_LEVEL);
 
 #define RUN_STATUS_LED DK_LED1
@@ -59,6 +61,11 @@ void run_time(k_work *item)
   bt::cts::read_current_time(read_current_time_cb);
   bt::gap::read_device_name(read_device_name_cb);
   bt::nus::send(reinterpret_cast<const uint8_t *>(GB_HTTP_REQUEST), sizeof(GB_HTTP_REQUEST) - 1);
+
+  char time_str[25] = {'\0'};
+  auto now = std::time(nullptr);
+  if (std::strftime(time_str, sizeof(time_str), "%c", std::localtime(&now)))
+    LOG_INF("Current time: %s", time_str);
 }
 
 void run_unregister(k_work *item);
