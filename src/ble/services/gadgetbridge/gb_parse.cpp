@@ -11,6 +11,77 @@ LOG_MODULE_REGISTER(gadgetbridge_gb_parse, CONFIG_NRF_TEST_LOG_LEVEL);
 
 using namespace services::gadgetbridge;
 
+struct message_type
+{
+  json_obj_token type;
+  static const std::array<json_obj_descr, 1> desc;
+};
+
+struct notify_message
+{
+  long id;
+  json_obj_token title;
+  json_obj_token subject;
+  json_obj_token body;
+  json_obj_token sender;
+  json_obj_token tel;
+
+  static constexpr std::string_view type = "notify"sv;
+  static const std::array<json_obj_descr, 6> desc;
+};
+
+struct notify_remove_message
+{
+  long id;
+
+  static constexpr std::string_view type = "notify-"sv;
+  static const std::array<json_obj_descr, 1> desc;
+};
+
+struct call_message
+{
+  json_obj_token cmd;
+  json_obj_token name;
+  json_obj_token number;
+
+  static constexpr std::string_view type = "call"sv;
+  static const std::array<json_obj_descr, 3> desc;
+};
+
+struct http_message
+{
+  json_obj_token id;
+  json_obj_token resp;
+  json_obj_token err;
+
+  static constexpr std::string_view type = "http"sv;
+  static const std::array<json_obj_descr, 3> desc;
+};
+
+struct musicinfo_message
+{
+  json_obj_token artist;
+  json_obj_token album;
+  json_obj_token track;
+  int duration;
+  int track_count;
+  int track_number;
+
+  static constexpr std::string_view type = "musicinfo"sv;
+  static const std::array<json_obj_descr, 6> desc;
+};
+
+struct musicstate_message
+{
+  json_obj_token state;
+  int position;
+  int shuffle;
+  int repeat;
+
+  static constexpr std::string_view type = "musicstate"sv;
+  static const std::array<json_obj_descr, 4> desc;
+};
+
 const std::array<json_obj_descr, 1> message_type::desc = {
     json_obj_descr JSON_OBJ_DESCR_PRIM_NAMED(message_type, "t", type, JSON_TOK_OPAQUE),
 };

@@ -20,7 +20,7 @@ void services::gadgetbridge::st_parse(std::string_view sv)
   auto seconds_str = sv.substr(0, end);
 
   long seconds;
-  auto result = std::from_chars(seconds_str.data(), seconds_str.data() + seconds_str.size(), seconds);
+  auto result = std::from_chars(seconds_str.data(), seconds_str.end(), seconds);
   if (result.ec == std::errc::invalid_argument)
     return;
 
@@ -35,7 +35,7 @@ void services::gadgetbridge::st_parse(std::string_view sv)
   auto tz_offset_str = sv.substr(0, end);
 
   float tz_offset;
-  result = std::from_chars(tz_offset_str.data(), tz_offset_str.data() + tz_offset_str.size(), tz_offset);
+  result = std::from_chars(tz_offset_str.data(), tz_offset_str.end(), tz_offset);
   if (result.ec == std::errc::invalid_argument)
     return;
 
