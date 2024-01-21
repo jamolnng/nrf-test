@@ -16,6 +16,7 @@
 #include <zephyr/bluetooth/conn.h>
 #include <zephyr/sys/reboot.h>
 
+#include <array>
 #include <ctime>
 
 LOG_MODULE_REGISTER(main, CONFIG_NRF_TEST_LOG_LEVEL);
@@ -62,10 +63,10 @@ void run_time(k_work *item)
   bt::gap::read_device_name(read_device_name_cb);
   bt::nus::send(reinterpret_cast<const uint8_t *>(GB_HTTP_REQUEST), sizeof(GB_HTTP_REQUEST) - 1);
 
-  char time_str[25] = {'\0'};
+  std::array<char, 25> time_str;
   auto now = std::time(nullptr);
-  if (std::strftime(time_str, sizeof(time_str), "%c", std::localtime(&now)))
-    LOG_INF("Current time: %s", time_str);
+  if (std::strftime(time_str.data(), time_str.size(), "%c", std::localtime(&now)))
+    LOG_INF("Current time: %s", time_str.data());
 }
 
 void run_unregister(k_work *item);
@@ -148,12 +149,17 @@ void run_batt(k_work *item)
     bt::bas::set_level(batt);
 
     int msg_len;
-    char buf[100];
+    std::array<char, 100> buf{0};
 
-    memset(buf, 0, sizeof(buf));
-    msg_len = snprintf(buf, sizeof(buf), "{\"t\":\"status\", \"bat\": %d, \"volt\": %.*f, \"chg\": %d} \n", batt,
-                       1, float(batt) / 30.0f, dir == 1);
-    bt::nus::send(reinterpret_cast<uint8_t *>(buf), msg_len);
+    int v = 3 * batt + 30;
+    msg_len = snprintf(buf.data(),
+                       sizeof(buf),
+                       "{\"t\":\"status\", \"bat\": %d, \"volt\": %d.%02d, \"chg\": %d} \n",
+                       batt,
+                       v / 100,
+                       v % 100,
+                       dir == 1);
+    bt::nus::send(reinterpret_cast<uint8_t *>(buf.data()), msg_len);
 
     if (batt == 50)
     {
