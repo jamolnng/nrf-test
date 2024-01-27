@@ -8,5 +8,97 @@
 // * Removing the node
 // * Connecting ADC channels
 
-// For more help, browse the DeviceTree documentation at https://docs.zephyrproject.org/latest/guides/dts/index.html
-// You can also visit the nRF DeviceTree extension documentation at https://nrfconnect.github.io/vscode-nrf-connect/devicetree/nrfdevicetree.html
+// For more help, browse the DeviceTree documentation at https: //docs.zephyrproject.org/latest/guides/dts/index.html
+// You can also visit the nRF DeviceTree extension documentation at https: //nrfconnect.github.io/vscode-nrf-connect/devicetree/nrfdevicetree.html
+
+&pinctrl {
+  spi4_default: spi4_default {
+    group1 {
+      psels = <NRF_PSEL(SPIM_SCK, 0, 10)>,
+              <NRF_PSEL(SPIM_MOSI, 0, 11)>;
+      nordic,drive-mode = <NRF_DRIVE_H0H1>;
+    };
+  };
+  spi4_sleep: spi4_sleep {
+    group1 {
+      psels = <NRF_PSEL(SPIM_SCK, 0, 10)>,
+              <NRF_PSEL(SPIM_MOSI, 0, 11)>;
+      // low-power-enable;
+      nordic,drive-mode = <NRF_DRIVE_H0H1>;
+    };
+  };
+
+  pwm0_default: pwm0_default {
+    group1 {
+      psels = <NRF_PSEL(PWM_OUT0, 0, 6)>;
+    };
+  };
+  pwm0_sleep: pwm0_sleep {
+    group1 {
+      psels = <NRF_PSEL(PWM_OUT0, 0, 6)>;
+      // low-power-enable;
+    };
+  };
+};
+
+/ {
+  chosen {
+    zephyr,display = &gc9a01;
+  };
+
+  aliases {
+    display-bkl = &display_bkl;
+  };
+
+  pwmleds {
+    compatible = "pwm-leds";
+    status = "okay";
+    display_bkl: pwm_led_0 {
+      pwms = <&pwm0 0 PWM_USEC(250) PWM_POLARITY_INVERTED>;
+    };
+  };
+};
+
+&pwm0 {
+  status = "okay";
+  pinctrl-0 = <&pwm0_default>;
+  pinctrl-1 = <&pwm0_sleep>;
+  pinctrl-names = "default", "sleep";
+};
+
+&spi4 {
+  status = "okay";
+  compatible = "nordic,nrf-spim";
+  pinctrl-0 = <&spi4_default>;
+  pinctrl-1 = <&spi4_sleep>;
+  pinctrl-names = "default", "sleep";
+  cs-gpios = <&gpio0 12 GPIO_ACTIVE_LOW>;
+
+  gc9a01: gc9a01@0 {
+    compatible = "buydisplay,gc9a01";
+    status = "okay";
+    spi-max-frequency = <DT_FREQ_M(32)>;
+    reg = <0>;
+    width = <240>;
+    height = <240>;
+    bl-gpios = <&gpio1 6 GPIO_ACTIVE_HIGH>;
+    reset-gpios = <&gpio0 25 GPIO_ACTIVE_HIGH>;
+    dc-gpios = <&gpio1 1 GPIO_ACTIVE_HIGH>;
+  };
+};
+
+&i2c1 {
+  status = "disabled";
+};
+
+&i2c2 {
+  status = "disabled";
+};
+
+&uart0 {
+  status = "disabled";
+};
+
+&gpio_fwd {
+  status = "disabled";
+};

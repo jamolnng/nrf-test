@@ -1,6 +1,6 @@
 #include <cstdint>
 
-namespace system
+namespace services
 {
   namespace gadgetbridge
   {

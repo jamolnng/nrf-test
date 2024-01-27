@@ -12,12 +12,21 @@
 #include <zephyr/input/input.h>
 #include <zephyr/logging/log.h>
 
+#include <zephyr/drivers/gpio.h>
+#include <zephyr/device.h>
+#include <zephyr/drivers/pwm.h>
+
 #include <dk_buttons_and_leds.h>
 #include <zephyr/bluetooth/conn.h>
 #include <zephyr/sys/reboot.h>
 
 #include <array>
 #include <ctime>
+#include <random>
+
+#include <nrfx_clock.h>
+
+static const struct pwm_dt_spec display_bkl = PWM_DT_SPEC_GET_OR(DT_ALIAS(display_bkl), {});
 
 LOG_MODULE_REGISTER(main, CONFIG_NRF_TEST_LOG_LEVEL);
 
@@ -55,6 +64,31 @@ void run_pair(k_work *item)
   bt::auth::set_pairable(!bt::auth::pairable());
 }
 
+// struct k_timer my_timer;
+void my_expiry_function(struct k_timer *timer_id)
+{
+  pwm_set_pulse_dt(&display_bkl, 0);
+}
+K_TIMER_DEFINE(my_timer, my_expiry_function, 0);
+
+void set_brightness(uint8_t bright)
+{
+  static uint8_t current = 32;
+  bright = std::min(bright, uint8_t(32));
+  uint8_t npulses = uint8_t(current - bright) % 32;
+  LOG_INF("Cur: %d, Bright: %d, Pulse: %d", current, bright, npulses);
+  current = bright;
+  if (npulses > 0)
+  {
+    pwm_set_pulse_dt(&display_bkl, display_bkl.period / 2);
+    k_timer_start(&my_timer, K_USEC(250 * (npulses - 1)), K_FOREVER);
+  }
+}
+
+std::random_device dev;
+std::mt19937 rng(dev());
+std::uniform_int_distribution<std::mt19937::result_type> dist(0, 255);
+
 void run_time(k_work *item);
 K_WORK_DELAYABLE_DEFINE(time_work, run_time);
 void run_time(k_work *item)
@@ -67,6 +101,20 @@ void run_time(k_work *item)
   auto now = std::time(nullptr);
   if (std::strftime(time_str.data(), time_str.size(), "%c", std::localtime(&now)))
     LOG_INF("Current time: %s", time_str.data());
+
+  // drivers::display::gc9a01::clear(dist(rng), dist(rng), dist(rng));
+  // drivers::display::gc9a01::clear(0xFF, 0xFF, 0xFF);
+
+  constexpr int mb = 17;
+  static int bright = mb;
+  // pwm_set_pulse_dt(&display_bkl, display_bkl.period / 2);
+  // k_timer_start(&my_timer, K_USEC(250 * (bright - 1)), K_FOREVER);
+  set_brightness(bright);
+  bright -= 1;
+  if (bright <= 0)
+  {
+    bright += mb;
+  }
 }
 
 void run_unregister(k_work *item);
@@ -121,7 +169,7 @@ void run_send(k_work *item);
 K_WORK_DELAYABLE_DEFINE(send_work, run_send);
 void run_send(k_work *item)
 {
-  if (!bt::connected() || !bt::nus::can_send() || system::gadgetbridge::send_ver())
+  if (!bt::connected() || !bt::nus::can_send() || services::gadgetbridge::send_ver())
   {
     k_work_schedule(&send_work, K_MSEC(500));
   }
@@ -187,9 +235,24 @@ void run_init(k_work *item)
   bt::init();
   bt::auth::set_callback(&_auth_callbacks);
   bt::auth::set_pairable(false);
-  system::gadgetbridge::init();
+  services::gadgetbridge::init();
+  // drivers::display::gc9a01::init();
+
+  ///////////////////////////////////////
+
+  if (!device_is_ready(display_bkl.dev))
+  {
+    LOG_WRN("Display brightness control not supported");
+  }
+
+  // k_timer_init(&my_timer, my_expiry_function, NULL);
+  pwm_set_pulse_dt(&display_bkl, 0);
+
+  ///////////////////////////////////////
 
   INPUT_CALLBACK_DEFINE(NULL, on_input_subsys_callback);
+
+  LOG_INF("Starting %s with CPU frequency: %d MHz\n", CONFIG_BOARD, SystemCoreClock / MHZ(1));
 
   k_work_schedule(&blink_work, K_NO_WAIT);
   k_work_schedule(&batt_work, K_NO_WAIT);
@@ -202,3 +265,9 @@ int main()
   k_work_submit(&init_work);
   return 0;
 }
+
+int hfclk()
+{
+  return nrfx_clock_divider_set(NRF_CLOCK_DOMAIN_HFCLK, NRF_CLOCK_HFCLK_DIV_1);
+}
+SYS_INIT(hfclk, EARLY, 0);

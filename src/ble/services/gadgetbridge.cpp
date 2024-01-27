@@ -96,12 +96,12 @@ void consume(const uint8_t *data, uint16_t len)
 bt::nus::nus_cb gb_nus_cb = {
     .receive = consume,
 };
-void system::gadgetbridge::init()
+void services::gadgetbridge::init()
 {
   bt::nus::set_callback(&gb_nus_cb);
 }
 
-int system::gadgetbridge::send_ver()
+int services::gadgetbridge::send_ver()
 {
   constexpr std::string_view sv("{\"t\":\"ver\","
                                 "\"fw\":\"" CONFIG_BT_DIS_FW_REV_STR "\","
