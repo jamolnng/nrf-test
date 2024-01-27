@@ -36,7 +36,7 @@ target_include_directories(app PRIVATE
 )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-threadsafe-statics -DGIT_HASH=\\\"${GIT_HASH}\\\"")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DGIT_HASH=\"${GIT_HASH}\"")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DGIT_HASH=\\\"${GIT_HASH}\\\"")
 
 # NORDIC SDK APP START
 target_sources(app PRIVATE ${app_sources})
