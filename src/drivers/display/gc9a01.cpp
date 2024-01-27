@@ -89,13 +89,13 @@ enum MemoryAccessParams
   HorizonalRefreshRightToLeft = 0x40,
 };
 
-constexpr auto MADCTL_MY = 0x80;  ///< Bottom to top
-constexpr auto MADCTL_MX = 0x40;  ///< Right to left
-constexpr auto MADCTL_MV = 0x20;  ///< Reverse Mode
-constexpr auto MADCTL_ML = 0x10;  ///< LCD refresh Bottom to top
-constexpr auto MADCTL_RGB = 0x00; ///< Red-Green-Blue pixel order
-constexpr auto MADCTL_BGR = 0x08; ///< Blue-Green-Red pixel order
-constexpr auto MADCTL_MH = 0x04;  ///< LCD refresh right to left
+// constexpr auto MADCTL_MY = 0x80;  ///< Bottom to top
+// constexpr auto MADCTL_MX = 0x40;  ///< Right to left
+// constexpr auto MADCTL_MV = 0x20;  ///< Reverse Mode
+// constexpr auto MADCTL_ML = 0x10;  ///< LCD refresh Bottom to top
+// constexpr auto MADCTL_RGB = 0x00; ///< Red-Green-Blue pixel order
+// constexpr auto MADCTL_BGR = 0x08; ///< Blue-Green-Red pixel order
+// constexpr auto MADCTL_MH = 0x04;  ///< LCD refresh right to left
 
 constexpr auto DISPLAY_WIDTH = DT_INST_PROP(0, width);
 constexpr auto DISPLAY_HEIGHT = DT_INST_PROP(0, height);
@@ -177,18 +177,6 @@ struct gc9a01_config_t
   struct gpio_dt_spec reset_gpio;
 };
 
-struct gc9a01_frame_t
-{
-  struct
-  {
-    uint16_t x, y;
-  } start;
-  struct
-  {
-    uint16_t x, y;
-  } end;
-};
-
 uint16_t rgb8_to_rgb565(uint8_t r, uint8_t g, uint8_t b)
 {
   uint16_t red5 = uint16_t(float(r) / 255.0f * 31.0f);
@@ -200,8 +188,11 @@ uint16_t rgb8_to_rgb565(uint8_t r, uint8_t g, uint8_t b)
 int gc9a01_write_cmd(const device *dev, uint8_t cmd);
 int gc9a01_write_data(const device *dev, const uint8_t *data, size_t len);
 int gc9a01_write_cmd_data(const device *dev, uint8_t cmd, const uint8_t *data, size_t len);
-void gc9a01_set_frame(const device *dev, const gc9a01_frame_t frame);
+void gc9a01_set_frame(const device *dev,
+                      const uint16_t x, const uint16_t y,
+                      const uint16_t endx, const uint16_t endy);
 
+// these are macros so the __ASSERT macro picks up the correct line of code
 #define gc9a01_spi_resume(dev)                                                \
   {                                                                           \
     const auto *config = (gc9a01_config_t *)dev->config;                      \
@@ -209,21 +200,22 @@ void gc9a01_set_frame(const device *dev, const gc9a01_frame_t frame);
     __ASSERT(rc == -EALREADY || rc == 0, "Failed resume SPI Bus");            \
   }
 
-#define gc9a01_spi_suspend(dev)                                                                               \
-  {                                                                                                           \
-    const auto *config = (gc9a01_config_t *)dev->config;                                                      \
-    __ASSERT(pm_device_action_run(config->bus.bus, PM_DEVICE_ACTION_SUSPEND) == 0, "Failed suspend SPI Bus"); \
+#define gc9a01_spi_suspend(dev)                                                \
+  {                                                                            \
+    const auto *config = (gc9a01_config_t *)dev->config;                       \
+    auto rc = pm_device_action_run(config->bus.bus, PM_DEVICE_ACTION_SUSPEND); \
+    __ASSERT(rc == -EALREADY || rc == 0, "Failed suspend SPI Bus");            \
   }
 
 void gc9a01_clear(const device *dev, uint16_t color)
 {
-  gc9a01_set_frame(dev, {{0, 0}, {DISPLAY_WIDTH, DISPLAY_HEIGHT}});
+  gc9a01_set_frame(dev, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
   constexpr auto divisor = 100;
   std::array<uint16_t, divisor> rgb;
   rgb.fill(__bswap_16(color)); // spi writes this in the wrong endian-ness so we have to flip the byte order
   gc9a01_write_cmd(dev, GC9A01A_RAMWR);
-  for (auto i = 0u; i < DISPLAY_WIDTH * DISPLAY_HEIGHT / divisor; ++i)
+  for (auto i = 0u; i < (DISPLAY_WIDTH * DISPLAY_HEIGHT) / divisor; ++i)
   {
     gc9a01_write_data(dev, (uint8_t *)rgb.data(), rgb.size() * 2);
   }
@@ -280,19 +272,19 @@ inline int gc9a01_write_cmd_data(const device *dev, uint8_t cmd, const uint8_t *
   return 0;
 }
 
-void gc9a01_set_frame(const device *dev, const gc9a01_frame_t frame)
+void gc9a01_set_frame(const device *dev, const uint16_t x, const uint16_t y, const uint16_t endx, const uint16_t endy)
 {
   uint8_t data[4];
-  data[0] = (frame.start.x >> 8) & 0xFF;
-  data[1] = frame.start.x & 0xFF;
-  data[2] = ((frame.end.x - 1) >> 8) & 0xFF;
-  data[3] = (frame.end.x - 1) & 0xFF;
+  data[0] = (x >> 8) & 0xFF;
+  data[1] = x & 0xFF;
+  data[2] = ((endx - 1) >> 8) & 0xFF;
+  data[3] = (endx - 1) & 0xFF;
   gc9a01_write_cmd_data(dev, COL_ADDR_SET, data, sizeof(data));
 
-  data[0] = (frame.start.y >> 8) & 0xFF;
-  data[1] = frame.start.y & 0xFF;
-  data[2] = ((frame.end.y - 1) >> 8) & 0xFF;
-  data[3] = (frame.end.y - 1) & 0xFF;
+  data[0] = (y >> 8) & 0xFF;
+  data[1] = y & 0xFF;
+  data[2] = ((endy - 1) >> 8) & 0xFF;
+  data[3] = (endy - 1) & 0xFF;
   gc9a01_write_cmd_data(dev, ROW_ADDR_SET, data, sizeof(data));
 }
 
@@ -368,8 +360,7 @@ int gc9a01_write_buf(const device *dev,
 {
   gc9a01_spi_resume(dev);
 
-  auto frame = gc9a01_frame_t{{x, y}, {x + desc->width - 1, y + desc->height - 1}};
-  gc9a01_set_frame(dev, frame);
+  gc9a01_set_frame(dev, x, y, uint16_t(x + desc->width - 1), uint16_t(y + desc->height - 1));
 
   size_t len = desc->width * desc->height * 2; // TODO: look into desc->buf_size
 
@@ -417,7 +408,26 @@ static int gc9a01_set_orientation(const struct device *dev,
                                   const enum display_orientation
                                       orientation)
 {
-  return -ENOTSUP;
+  gc9a01_spi_resume(dev);
+  uint8_t data;
+  switch (orientation)
+  {
+  case DISPLAY_ORIENTATION_NORMAL:
+    data = ExchangeModeReverse | RowOrderBottomToTop | ColumnOrderRightToLeft | PixelOrderBGR;
+    break;
+  case DISPLAY_ORIENTATION_ROTATED_90:
+    data = HorizonalRefreshLeftToRight | RowOrderBottomToTop | 0 | PixelOrderBGR;
+    break;
+  case DISPLAY_ORIENTATION_ROTATED_180:
+    data = ExchangeModeReverse | 0 | 0 | PixelOrderBGR;
+    break;
+  case DISPLAY_ORIENTATION_ROTATED_270:
+    data = HorizonalRefreshLeftToRight | ColumnOrderRightToLeft | 0 | 0 | PixelOrderBGR;
+    break;
+  }
+  int err = gc9a01_write_cmd_data(dev, GC9A01A_MADCTL, &data, 1);
+  gc9a01_spi_suspend(dev);
+  return err;
 }
 
 static int gc9a01_set_pixel_format(const struct device *dev,
@@ -426,26 +436,12 @@ static int gc9a01_set_pixel_format(const struct device *dev,
   return -ENOTSUP;
 }
 
-struct display_driver_api gc9a01_driver_api = {
-    .blanking_on = gc9a01_blanking_on,
-    .blanking_off = gc9a01_blanking_off,
-    .write = gc9a01_write_buf,
-    .read = gc9a01_read_buf,
-    .get_framebuffer = gc9a01_get_framebuffer,
-    .set_brightness = gc9a01_set_brightness,
-    .set_contrast = gc9a01_set_contrast,
-    .get_capabilities = gc9a01_get_capabilities,
-    .set_pixel_format = gc9a01_set_pixel_format,
-    .set_orientation = gc9a01_set_orientation,
-};
-
 int gc9a01_pm_action(const struct device *dev,
                      enum pm_device_action action)
 {
-  int err = 0;
-  const struct gc9a01_config_t *config = (gc9a01_config_t *)dev->config;
-  __ASSERT(pm_device_action_run(config->bus.bus, PM_DEVICE_ACTION_RESUME) == 0, "Failed resume SPI Bus");
+  gc9a01_spi_resume(dev);
 
+  auto err = 0;
   switch (action)
   {
   case PM_DEVICE_ACTION_RESUME:
@@ -466,13 +462,7 @@ int gc9a01_pm_action(const struct device *dev,
     err = -ENOTSUP;
   }
 
-  err = pm_device_action_run(config->bus.bus, PM_DEVICE_ACTION_SUSPEND);
-  __ASSERT(err == 0 || err == -EALREADY, "Failed suspend SPI Bus");
-
-  if (err == -EALREADY)
-  {
-    err = 0;
-  }
+  gc9a01_spi_suspend(dev);
 
   if (err < 0)
   {
@@ -481,6 +471,19 @@ int gc9a01_pm_action(const struct device *dev,
 
   return err;
 }
+
+struct display_driver_api gc9a01_driver_api = {
+    .blanking_on = gc9a01_blanking_on,
+    .blanking_off = gc9a01_blanking_off,
+    .write = gc9a01_write_buf,
+    .read = gc9a01_read_buf,
+    .get_framebuffer = gc9a01_get_framebuffer,
+    .set_brightness = gc9a01_set_brightness,
+    .set_contrast = gc9a01_set_contrast,
+    .get_capabilities = gc9a01_get_capabilities,
+    .set_pixel_format = gc9a01_set_pixel_format,
+    .set_orientation = gc9a01_set_orientation,
+};
 
 const struct gc9a01_config_t gc9a01_configa = {
     .bus = SPI_DT_SPEC_INST_GET(0, SPI_OP_MODE_MASTER | SPI_WORD_SET(8), 0),
@@ -507,4 +510,11 @@ const struct gc9a01_config_t gc9a01_configa = {
   }
 
 PM_DEVICE_DT_INST_DEFINE(0, gc9a01_pm_action);
-DEVICE_DT_INST_DEFINE(0, gc9a01_init, PM_DEVICE_DT_INST_GET(0), NULL, &gc9a01_configa, POST_KERNEL, CONFIG_DISPLAY_INIT_PRIORITY, &gc9a01_driver_api);
+DEVICE_DT_INST_DEFINE(0,
+                      gc9a01_init,
+                      PM_DEVICE_DT_INST_GET(0),
+                      NULL,
+                      &gc9a01_configa,
+                      POST_KERNEL,
+                      CONFIG_DISPLAY_INIT_PRIORITY,
+                      &gc9a01_driver_api);
