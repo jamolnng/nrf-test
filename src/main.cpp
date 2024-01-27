@@ -26,6 +26,8 @@
 
 #include <nrfx_clock.h>
 
+#include <lvgl.h>
+
 static const struct pwm_dt_spec display_bkl = PWM_DT_SPEC_GET_OR(DT_ALIAS(display_bkl), {});
 
 LOG_MODULE_REGISTER(main, CONFIG_NRF_TEST_LOG_LEVEL);
@@ -102,13 +104,8 @@ void run_time(k_work *item)
   if (std::strftime(time_str.data(), time_str.size(), "%c", std::localtime(&now)))
     LOG_INF("Current time: %s", time_str.data());
 
-  // drivers::display::gc9a01::clear(dist(rng), dist(rng), dist(rng));
-  // drivers::display::gc9a01::clear(0xFF, 0xFF, 0xFF);
-
   constexpr int mb = 17;
   static int bright = mb;
-  // pwm_set_pulse_dt(&display_bkl, display_bkl.period / 2);
-  // k_timer_start(&my_timer, K_USEC(250 * (bright - 1)), K_FOREVER);
   set_brightness(bright);
   bright -= 1;
   if (bright <= 0)
@@ -174,11 +171,16 @@ void run_send(k_work *item)
     k_work_schedule(&send_work, K_MSEC(500));
   }
 }
+lv_obj_t *hello_world_label;
 
 void run_blink(k_work *item);
 K_WORK_DELAYABLE_DEFINE(blink_work, run_blink);
 void run_blink(k_work *item)
 {
+  std::array<char, 25> time_buf{0};
+  auto now = std::time(nullptr);
+  std::strftime(time_buf.data(), time_buf.size(), "%c", std::localtime(&now));
+  lv_label_set_text(hello_world_label, time_buf.data());
   static int blink_status = 0;
   dk_set_led(RUN_STATUS_LED, (++blink_status) % 2);
   dk_set_led(BT_STATUS_LED, bt::connected());
@@ -221,6 +223,13 @@ void run_batt(k_work *item)
   k_work_schedule(&batt_work, K_MSEC(1000));
 }
 
+void run_lvgl(k_work *item);
+K_WORK_DELAYABLE_DEFINE(lvgl_work, run_lvgl);
+void run_lvgl(k_work *item)
+{
+  k_work_schedule(&lvgl_work, K_MSEC(lv_task_handler()));
+}
+
 void passkey_display(unsigned int passkey)
 {
   LOG_INF("Passkey %06u", passkey);
@@ -257,12 +266,30 @@ void run_init(k_work *item)
   k_work_schedule(&blink_work, K_NO_WAIT);
   k_work_schedule(&batt_work, K_NO_WAIT);
   k_work_schedule(&send_work, K_NO_WAIT);
+
+  const struct device *display_dev;
+  display_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
+  if (!device_is_ready(display_dev))
+  {
+    LOG_ERR("Device not ready, aborting test");
+    return;
+  }
+
+  hello_world_label = lv_label_create(lv_scr_act());
+  lv_label_set_text(hello_world_label, "Hello world!");
+  // lv_obj_set_style_text_font(hello_world_label, &lv_font_montserrat_20, 0);
+  lv_obj_align(hello_world_label, LV_ALIGN_CENTER, 0, 0);
+  lv_task_handler();
+  // display_blanking_off(display_dev);
+  k_work_schedule(&lvgl_work, K_NO_WAIT);
 }
 K_WORK_DEFINE(init_work, run_init);
 
 int main()
 {
+  LOG_INF("Git hash: %s", GIT_HASH);
   k_work_submit(&init_work);
+
   return 0;
 }
 

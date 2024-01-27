@@ -84,6 +84,7 @@
     bl-gpios = <&gpio1 6 GPIO_ACTIVE_HIGH>;
     reset-gpios = <&gpio0 25 GPIO_ACTIVE_HIGH>;
     dc-gpios = <&gpio1 1 GPIO_ACTIVE_HIGH>;
+    rotation = <180>;
   };
 };
 

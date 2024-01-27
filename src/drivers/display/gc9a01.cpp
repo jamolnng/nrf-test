@@ -277,14 +277,14 @@ void gc9a01_set_frame(const device *dev, const uint16_t x, const uint16_t y, con
   uint8_t data[4];
   data[0] = (x >> 8) & 0xFF;
   data[1] = x & 0xFF;
-  data[2] = ((endx - 1) >> 8) & 0xFF;
-  data[3] = (endx - 1) & 0xFF;
+  data[2] = (endx >> 8) & 0xFF;
+  data[3] = endx & 0xFF;
   gc9a01_write_cmd_data(dev, COL_ADDR_SET, data, sizeof(data));
 
   data[0] = (y >> 8) & 0xFF;
   data[1] = y & 0xFF;
-  data[2] = ((endy - 1) >> 8) & 0xFF;
-  data[3] = (endy - 1) & 0xFF;
+  data[2] = (endy >> 8) & 0xFF;
+  data[3] = endy & 0xFF;
   gc9a01_write_cmd_data(dev, ROW_ADDR_SET, data, sizeof(data));
 }
 

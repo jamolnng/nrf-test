@@ -104,7 +104,7 @@ void services::gadgetbridge::init()
 int services::gadgetbridge::send_ver()
 {
   constexpr std::string_view sv("{\"t\":\"ver\","
-                                "\"fw\":\"" CONFIG_BT_DIS_FW_REV_STR "\","
+                                "\"fw\":\"" GIT_HASH "\","
                                 "\"hw\":\"" CONFIG_BT_DIS_HW_REV_STR "\"}");
   return bt::nus::send(reinterpret_cast<const uint8_t *>(sv.data()), sv.length());
 }

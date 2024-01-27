@@ -41,7 +41,7 @@ void services::gadgetbridge::st_parse(std::string_view sv)
     return;
 
   std::array<char, std::size("UTC+00")> tz_buf{0};
-  snprintf(tz_buf.data(), tz_buf.size(), "UTC%+03d", 3, -tz_offset % 100);
+  snprintf(tz_buf.data(), tz_buf.size(), "UTC%+03d", -tz_offset % 100);
   setenv("TZ", tz_buf.data(), 1);
   tzset();
 
