@@ -28,11 +28,11 @@ void parse(std::string_view sv)
 {
   if (sv.starts_with("GB("))
   {
-    services::gadgetbridge::gb_parse(sv);
+    bt::services::gadgetbridge::gb_parse(sv);
   }
   else if (sv.starts_with("setTime("))
   {
-    services::gadgetbridge::st_parse(sv);
+    bt::services::gadgetbridge::st_parse(sv);
   }
 }
 
@@ -96,12 +96,12 @@ void consume(const uint8_t *data, uint16_t len)
 bt::nus::nus_cb gb_nus_cb = {
     .receive = consume,
 };
-void services::gadgetbridge::init()
+void bt::services::gadgetbridge::init()
 {
   bt::nus::set_callback(&gb_nus_cb);
 }
 
-int services::gadgetbridge::send_ver()
+int bt::services::gadgetbridge::send_ver()
 {
   constexpr std::string_view sv("{\"t\":\"ver\","
                                 "\"fw\":\"" GIT_HASH "\","

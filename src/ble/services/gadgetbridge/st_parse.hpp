@@ -2,10 +2,7 @@
 
 #include <string_view>
 
-namespace services
+namespace bt::services::gadgetbridge
 {
-  namespace gadgetbridge
-  {
-    void st_parse(std::string_view sv);
-  }
+  void st_parse(std::string_view sv);
 }

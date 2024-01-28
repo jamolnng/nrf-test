@@ -36,7 +36,7 @@ constexpr std::array<std::string_view, 13> month_of_year = {
     "December"sv,
 };
 
-void bt::current_time_print(bt_cts_current_time *current_time)
+void bt::utils::current_time_print(bt_cts_current_time *current_time)
 {
   auto day = day_of_week[current_time->exact_time_256.day_of_week];
   LOG_INF("\tDay of week   %.*s", day.size(), day.data());

@@ -65,16 +65,12 @@ void pairing_accept(bt_conn *conn)
 void pairing_complete(bt_conn *conn, bool bonded)
 {
   LOG_DBG("Pairing complete");
-  // bt_conn_info info;
-  // char addr[BT_ADDR_LE_STR_LEN];
-
-  // if (bt_conn_get_info(conn, &info) < 0)
-  // {
-  //   addr[0] = '\0';
-  // }
-
-  // bt_addr_le_to_str(info.le.remote, addr, sizeof(addr));
   bt::auth::set_pairable(false);
+
+  if (auth_callbacks && auth_callbacks->pairing_complete)
+  {
+    auth_callbacks->pairing_complete();
+  }
 }
 
 void pairing_failed(struct bt_conn *conn, enum bt_security_err reason)

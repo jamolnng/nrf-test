@@ -209,19 +209,18 @@ void gc9a01_set_frame(const device *dev,
 
 void gc9a01_clear(const device *dev, uint16_t color)
 {
-  gc9a01_set_frame(dev, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT);
+  gc9a01_set_frame(dev, 0, 0, DISPLAY_WIDTH - 1, DISPLAY_HEIGHT - 1);
 
-  constexpr auto divisor = 100;
-  std::array<uint16_t, divisor> rgb;
+  std::array<uint16_t, 100> rgb;
   rgb.fill(__bswap_16(color)); // spi writes this in the wrong endian-ness so we have to flip the byte order
   gc9a01_write_cmd(dev, GC9A01A_RAMWR);
-  for (auto i = 0u; i < (DISPLAY_WIDTH * DISPLAY_HEIGHT) / divisor; ++i)
+  for (auto i = 0u; i < (DISPLAY_WIDTH * DISPLAY_HEIGHT) / rgb.size(); ++i)
   {
     gc9a01_write_data(dev, (uint8_t *)rgb.data(), rgb.size() * 2);
   }
-  for (auto i = 0u; i < (DISPLAY_WIDTH * DISPLAY_HEIGHT) % divisor; ++i)
+  for (auto i = 0u; i < (DISPLAY_WIDTH * DISPLAY_HEIGHT) % rgb.size(); ++i)
   {
-    gc9a01_write_data(dev, (uint8_t *)rgb.data(), divisor * 2);
+    gc9a01_write_data(dev, (uint8_t *)rgb.data(), ((DISPLAY_WIDTH * DISPLAY_HEIGHT) % rgb.size()) * 2);
   }
 }
 
@@ -344,12 +343,12 @@ int gc9a01_init(const device *dev)
 
 int gc9a01_blanking_on(const device *dev)
 {
-  return gc9a01_write_cmd(dev, GC9A01A_DISPON);
+  return gc9a01_write_cmd(dev, GC9A01A_DISPOFF);
 }
 
 int gc9a01_blanking_off(const device *dev)
 {
-  return gc9a01_write_cmd(dev, GC9A01A_DISPOFF);
+  return gc9a01_write_cmd(dev, GC9A01A_DISPON);
 }
 
 int gc9a01_write_buf(const device *dev,

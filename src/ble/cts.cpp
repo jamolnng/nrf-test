@@ -1,5 +1,3 @@
-#ifdef CONFIG_BT_CTS_CLIENT
-
 #include "ble/cts.hpp"
 #include "ble/utils.hpp"
 #include "ble/gatt_dm.hpp"
@@ -16,7 +14,7 @@ static bt_cts_client cts_c;
 void notify_current_time_cb(bt_cts_client *cts_c,
                             bt_cts_current_time *current_time)
 {
-  bt::current_time_print(current_time);
+  bt::utils::current_time_print(current_time);
 }
 
 static void enable_notifications(bt_conn *conn)
@@ -81,5 +79,3 @@ void bt::cts::read_current_time(bt_cts_read_cb cb)
     }
   }
 }
-
-#endif

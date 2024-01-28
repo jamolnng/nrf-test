@@ -35,6 +35,11 @@ target_sources(app PRIVATE
   src/ui/ui_helpers.c
   # src/ui/ui_events.cpp
 
+  src/managers/bluetooth.cpp
+  src/managers/devkit.cpp
+  src/managers/display.cpp
+  src/managers/hfclk.cpp
+
   src/main.cpp
 )
 

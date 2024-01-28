@@ -1,10 +1,9 @@
+#pragma once
+
 #include <cstdint>
 
-namespace bt
+namespace bt::bas
 {
-  namespace bas
-  {
-    uint8_t get_level();
-    void set_level(uint8_t level);
-  }
+  uint8_t get_level();
+  void set_level(uint8_t level);
 }

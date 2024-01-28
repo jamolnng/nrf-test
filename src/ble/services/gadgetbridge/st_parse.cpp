@@ -9,7 +9,7 @@
 
 LOG_MODULE_REGISTER(gadgetbridge_st_parse, CONFIG_NRF_TEST_LOG_LEVEL);
 
-void services::gadgetbridge::st_parse(std::string_view sv)
+void bt::services::gadgetbridge::st_parse(std::string_view sv)
 {
   std::array<char, 25> time_buf{0};
   auto now = std::time(nullptr);

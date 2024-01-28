@@ -29,6 +29,7 @@
 
 LOG_MODULE_REGISTER(bt, CONFIG_NRF_TEST_BLE_LOG_LEVEL);
 
+bt::bt_cb *bt_callbacks;
 static uint32_t mtu_max_send_len = 0;
 bool _connected = false;
 static bt_conn *_bt_current_conn;
@@ -189,6 +190,11 @@ static void connected(bt_conn *conn, uint8_t err)
       return;
     }
     _connected = true;
+
+    if (bt_callbacks && bt_callbacks->connected)
+    {
+      bt_callbacks->connected();
+    }
   }
   else
   {
@@ -209,6 +215,11 @@ static void disconnected(bt_conn *conn, uint8_t reason)
   }
 
   _connected = false;
+
+  if (bt_callbacks && bt_callbacks->disconnected)
+  {
+    bt_callbacks->disconnected();
+  }
 }
 
 static void security_changed(bt_conn *conn, bt_security_t level, bt_security_err err)
@@ -316,5 +327,15 @@ bool bt::connected()
 
 bool bt::secure_connection()
 {
+  if (!_bt_current_conn)
+    return false;
   return bt_conn_get_security(_bt_current_conn) >= BT_SECURITY_L2;
+}
+
+void bt::set_callback(bt_cb *cb)
+{
+  if (cb != nullptr)
+  {
+    bt_callbacks = cb;
+  }
 }

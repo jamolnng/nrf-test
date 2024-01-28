@@ -9,7 +9,7 @@ using namespace std::string_view_literals;
 
 LOG_MODULE_REGISTER(gadgetbridge_gb_parse, CONFIG_NRF_TEST_LOG_LEVEL);
 
-using namespace services::gadgetbridge;
+using namespace bt::services::gadgetbridge;
 
 struct message_type
 {
@@ -130,7 +130,7 @@ const std::map<std::string_view, MessageType> type_map = {
     {http_message::type, Http},
 };
 
-MessageType services::gadgetbridge::str_to_type(std::string_view sv)
+MessageType bt::services::gadgetbridge::str_to_type(std::string_view sv)
 {
   auto t = type_map.find(sv);
   if (t != type_map.end())
@@ -296,7 +296,7 @@ void dump_gb(std::string_view sv)
     LOG_ERR("JSON decode error: %d", ret);
     return;
   }
-  switch (services::gadgetbridge::str_to_type(type_str))
+  switch (bt::services::gadgetbridge::str_to_type(type_str))
   {
   case Notify:
     dump_notify(sv);
@@ -322,7 +322,7 @@ void dump_gb(std::string_view sv)
   }
 }
 
-void services::gadgetbridge::gb_parse(std::string_view sv)
+void bt::services::gadgetbridge::gb_parse(std::string_view sv)
 {
   sv = sv.substr(3, sv.size() - 4);
   dump_gb(sv);

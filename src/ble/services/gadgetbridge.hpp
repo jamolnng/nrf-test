@@ -1,10 +1,9 @@
+#pragma once
+
 #include <cstdint>
 
-namespace services
+namespace bt::services::gadgetbridge
 {
-  namespace gadgetbridge
-  {
-    void init();
-    int send_ver();
-  }
+  void init();
+  int send_ver();
 }

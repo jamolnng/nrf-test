@@ -2,29 +2,26 @@
 
 #include <zephyr/bluetooth/conn.h>
 
-namespace bt
+namespace bt::gatt_dm
 {
-  namespace gatt_dm
-  {
-    enum Service
-    {
+      enum Service
+      {
 #ifdef CONFIG_BT_GATTP
-      GAP_Client,
+            GAP_Client,
 #endif
 #ifdef CONFIG_GATT_0X1801_CLIENT
-      GATT_0X1801_Client,
+            GATT_0X1801_Client,
 #endif
 #ifdef CONFIG_BT_CTS_CLIENT
-      CTS_Client,
+            CTS_Client,
 #endif
 #ifdef CONFIG_BT_AMS_CLIENT
-      AMS_Client,
+            AMS_Client,
 #endif
 #ifdef CONFIG_BT_ANCS_CLIENT
-      ANCS_Client,
+            ANCS_Client,
 #endif
-    };
-    void start(bt_conn *conn);
-    bool has(Service service);
-  }
+      };
+      void start(bt_conn *conn);
+      bool has(Service service);
 }
