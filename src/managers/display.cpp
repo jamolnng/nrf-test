@@ -10,6 +10,8 @@
 #include <zephyr/drivers/display.h>
 
 #include <algorithm>
+#include <array>
+#include <ctime>
 
 #include <lvgl.h>
 
@@ -129,6 +131,18 @@ void backlight_timer_expire(k_timer *timer)
 
 void Display::render(k_work *work)
 {
+  std::array<char, 25> time_buf{0};
+  auto now = std::time(nullptr);
+
+  std::strftime(time_buf.data(), time_buf.size(), "%a %b %d", std::localtime(&now));
+  lv_label_set_text(ui_daymonth, time_buf.data());
+
+  std::strftime(time_buf.data(), time_buf.size(), "%T", std::localtime(&now));
+  lv_label_set_text(ui_timehhmmss, time_buf.data());
+
+  std::strftime(time_buf.data(), time_buf.size(), "%Y", std::localtime(&now));
+  lv_label_set_text(ui_year, time_buf.data());
+
   k_work_delayable *_render_work = CONTAINER_OF(work, k_work_delayable, work);
   k_work_schedule(_render_work, K_MSEC(lv_task_handler()));
 }

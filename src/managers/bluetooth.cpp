@@ -6,6 +6,8 @@
 
 #include <zephyr/logging/log.h>
 
+#include "ui/ui.h"
+
 using namespace managers::bt;
 
 LOG_MODULE_REGISTER(nrf_test_bt, CONFIG_NRF_TEST_LOG_LEVEL);
@@ -55,10 +57,10 @@ void Bluetooth::passkey_display_cb(unsigned int passkey)
 
 void Bluetooth::connected_cb()
 {
-  LOG_DBG("BT Connected");
+  lv_obj_clear_flag(ui_bluetooth, LV_OBJ_FLAG_HIDDEN);
 }
 
 void Bluetooth::disconnected_cb()
 {
-  LOG_DBG("BT Disconnected");
+  lv_obj_add_flag(ui_bluetooth, LV_OBJ_FLAG_HIDDEN);
 }

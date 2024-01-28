@@ -24,12 +24,15 @@ extern "C" {
 
 #include "ui_helpers.h"
 #include "ui_events.h"
-// SCREEN: ui_Screen1
-void ui_Screen1_screen_init(void);
-extern lv_obj_t * ui_Screen1;
-extern lv_obj_t * ui_clocktime;
+// SCREEN: ui_simple_watchface
+void ui_simple_watchface_screen_init(void);
+extern lv_obj_t * ui_simple_watchface;
 extern lv_obj_t * ui_daymonth;
+extern lv_obj_t * ui_timehhmmss;
 extern lv_obj_t * ui_year;
+extern lv_obj_t * ui_bluetooth;
+void ui_event_brightness_slider(lv_event_t * e);
+extern lv_obj_t * ui_brightness_slider;
 extern lv_obj_t * ui____initial_actions0;
 
 

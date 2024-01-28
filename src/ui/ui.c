@@ -9,12 +9,15 @@
 ///////////////////// VARIABLES ////////////////////
 
 
-// SCREEN: ui_Screen1
-void ui_Screen1_screen_init(void);
-lv_obj_t * ui_Screen1;
-lv_obj_t * ui_clocktime;
+// SCREEN: ui_simple_watchface
+void ui_simple_watchface_screen_init(void);
+lv_obj_t * ui_simple_watchface;
 lv_obj_t * ui_daymonth;
+lv_obj_t * ui_timehhmmss;
 lv_obj_t * ui_year;
+lv_obj_t * ui_bluetooth;
+void ui_event_brightness_slider(lv_event_t * e);
+lv_obj_t * ui_brightness_slider;
 lv_obj_t * ui____initial_actions0;
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////
@@ -28,6 +31,14 @@ lv_obj_t * ui____initial_actions0;
 ///////////////////// ANIMATIONS ////////////////////
 
 ///////////////////// FUNCTIONS ////////////////////
+void ui_event_brightness_slider(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_RELEASED) {
+        slidervc_fn(e);
+    }
+}
 
 ///////////////////// SCREENS ////////////////////
 
@@ -37,7 +48,7 @@ void ui_init(void)
     lv_theme_t * theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED),
                                                true, LV_FONT_DEFAULT);
     lv_disp_set_theme(dispp, theme);
-    ui_Screen1_screen_init();
+    ui_simple_watchface_screen_init();
     ui____initial_actions0 = lv_obj_create(NULL);
-    lv_disp_load_scr(ui_Screen1);
+    lv_disp_load_scr(ui_simple_watchface);
 }
