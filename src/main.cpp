@@ -8,6 +8,8 @@
 
 #include "ble/services/gadgetbridge.hpp"
 
+#include "ui/ui.h"
+
 #include <zephyr/kernel.h>
 #include <zephyr/input/input.h>
 #include <zephyr/logging/log.h>
@@ -183,8 +185,16 @@ void run_blink(k_work *item)
 {
   std::array<char, 25> time_buf{0};
   auto now = std::time(nullptr);
-  std::strftime(time_buf.data(), time_buf.size(), "%c", std::localtime(&now));
-  lv_label_set_text(hello_world_label, time_buf.data());
+
+  std::strftime(time_buf.data(), time_buf.size(), "%a %b %d", std::localtime(&now));
+  lv_label_set_text(ui_daymonth, time_buf.data());
+
+  std::strftime(time_buf.data(), time_buf.size(), "%T", std::localtime(&now));
+  lv_label_set_text(ui_clocktime, time_buf.data());
+
+  std::strftime(time_buf.data(), time_buf.size(), "%Y", std::localtime(&now));
+  lv_label_set_text(ui_year, time_buf.data());
+
   static int blink_status = 0;
   dk_set_led(RUN_STATUS_LED, (++blink_status) % 2);
   dk_set_led(BT_STATUS_LED, bt::connected());
@@ -320,19 +330,21 @@ void run_init(k_work *item)
     touch_indev = lv_indev_get_next(touch_indev);
   }
 
-  lv_obj_add_event_cb(lv_scr_act(), lvgl_screen_gesture_event_callback, LV_EVENT_ALL, NULL);
+  ui_init();
 
-  hello_world_label = lv_label_create(lv_scr_act());
-  event_label = lv_label_create(lv_scr_act());
-  lv_label_set_text(hello_world_label, "Hello world!");
-  lv_label_set_text(event_label, "");
-  lv_obj_set_style_text_font(hello_world_label, &lv_font_montserrat_16, 0);
-  lv_obj_set_style_text_font(event_label, &lv_font_montserrat_12, 0);
-  lv_obj_align(hello_world_label, LV_ALIGN_CENTER, 0, 0);
-  lv_obj_align(event_label, LV_ALIGN_CENTER, 0, -25);
-  lv_obj_clear_flag(lv_scr_act(), LV_OBJ_FLAG_SCROLLABLE);
-  lv_obj_clear_flag(hello_world_label, LV_OBJ_FLAG_SCROLLABLE);
-  lv_obj_clear_flag(event_label, LV_OBJ_FLAG_SCROLLABLE);
+  // lv_obj_add_event_cb(lv_scr_act(), lvgl_screen_gesture_event_callback, LV_EVENT_ALL, NULL);
+
+  // hello_world_label = lv_label_create(lv_scr_act());
+  // event_label = lv_label_create(lv_scr_act());
+  // lv_label_set_text(hello_world_label, "Hello world!");
+  // lv_label_set_text(event_label, "");
+  // lv_obj_set_style_text_font(hello_world_label, &lv_font_montserrat_16, 0);
+  // lv_obj_set_style_text_font(event_label, &lv_font_montserrat_12, 0);
+  // lv_obj_align(hello_world_label, LV_ALIGN_CENTER, 0, 0);
+  // lv_obj_align(event_label, LV_ALIGN_CENTER, 0, -25);
+  // lv_obj_clear_flag(lv_scr_act(), LV_OBJ_FLAG_SCROLLABLE);
+  // lv_obj_clear_flag(hello_world_label, LV_OBJ_FLAG_SCROLLABLE);
+  // lv_obj_clear_flag(event_label, LV_OBJ_FLAG_SCROLLABLE);
   lv_task_handler();
   // display_blanking_off(display_dev);
   k_work_schedule(&lvgl_work, K_NO_WAIT);

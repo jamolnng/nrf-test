@@ -190,6 +190,8 @@ static int cst816s_process(const device *dev)
     case Gesture::LongPress:
       // input_report_key(dev, INPUT_BTN_MIDDLE, 0, true, K_FOREVER);
       break;
+    case Gesture::None:
+      break;
     }
   }
 
