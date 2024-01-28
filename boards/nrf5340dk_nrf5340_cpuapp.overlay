@@ -39,6 +39,21 @@
       // low-power-enable;
     };
   };
+
+  i2c2_default: i2c2_default {
+    group1 {
+      psels = <NRF_PSEL(TWIM_SDA, 1, 12)>,
+              <NRF_PSEL(TWIM_SCL, 1, 13)>;
+    };
+  };
+
+  i2c2_sleep: i2c2_sleep {
+    group1 {
+      psels = <NRF_PSEL(TWIM_SDA, 1, 12)>,
+              <NRF_PSEL(TWIM_SCL, 1, 13)>;
+      // low-power-enable;
+    };
+  };
 };
 
 / {
@@ -57,6 +72,13 @@
       pwms = <&pwm0 0 PWM_USEC(250) PWM_POLARITY_INVERTED>;
     };
   };
+
+  lvgl_pointer_input: lvgl_pointer {
+    compatible = "zephyr,lvgl-pointer-input";
+    input = <&cst816s>;
+    swap-xy;
+    invert-x;
+  };
 };
 
 &pwm0 {
@@ -64,6 +86,22 @@
   pinctrl-0 = <&pwm0_default>;
   pinctrl-1 = <&pwm0_sleep>;
   pinctrl-names = "default", "sleep";
+};
+
+&i2c2 {
+  compatible = "nordic,nrf-twim";
+  status = "okay";
+  clock-frequency = <I2C_BITRATE_FAST>;
+  pinctrl-0 = <&i2c2_default>;
+  pinctrl-1 = <&i2c2_sleep>;
+  pinctrl-names = "default", "sleep";
+
+  cst816s: cst816s@15 {
+    compatible = "hynitron,cst816s";
+    reg = <0x15>;
+    irq-gpios = <&gpio1 15 GPIO_ACTIVE_LOW>;
+    rst-gpios = <&gpio1 14 GPIO_ACTIVE_LOW>;
+  };
 };
 
 &spi4 {
@@ -89,10 +127,6 @@
 };
 
 &i2c1 {
-  status = "disabled";
-};
-
-&i2c2 {
   status = "disabled";
 };
 

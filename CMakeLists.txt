@@ -27,6 +27,7 @@ target_sources(app PRIVATE
   src/ble/services/gadgetbridge/st_parse.cpp
 
   src/drivers/display/gc9a01.cpp
+  src/drivers/input/cst816s.cpp
 
   src/main.cpp
 )

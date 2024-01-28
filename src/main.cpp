@@ -139,7 +139,7 @@ void run_reset(k_work *item)
 
 void on_input_subsys_callback(struct input_event *evt)
 {
-  LOG_DBG("Event: %d, %d, %d, %d", evt->sync, evt->code, evt->type, evt->value);
+  // LOG_DBG("Event: %d, %d, %d, %d", evt->sync, evt->code, evt->type, evt->value);
   if (evt->value == 1)
   {
     switch (evt->code)
@@ -166,12 +166,16 @@ void run_send(k_work *item);
 K_WORK_DELAYABLE_DEFINE(send_work, run_send);
 void run_send(k_work *item)
 {
-  if (!bt::connected() || !bt::nus::can_send() || services::gadgetbridge::send_ver())
+  if (!bt::connected() ||
+      !bt::secure_connection() ||
+      !bt::nus::can_send() ||
+      services::gadgetbridge::send_ver())
   {
     k_work_schedule(&send_work, K_MSEC(500));
   }
 }
 lv_obj_t *hello_world_label;
+lv_obj_t *event_label;
 
 void run_blink(k_work *item);
 K_WORK_DELAYABLE_DEFINE(blink_work, run_blink);
@@ -191,7 +195,9 @@ void run_batt(k_work *item);
 K_WORK_DELAYABLE_DEFINE(batt_work, run_batt);
 void run_batt(k_work *item)
 {
-  if (bt::connected())
+  if (bt::connected() &&
+      bt::secure_connection() &&
+      bt::nus::can_send())
   {
     static uint8_t batt = 100;
     static uint8_t dir = -1;
@@ -238,6 +244,31 @@ bt::auth::auth_cb _auth_callbacks = {
     .passkey_display = passkey_display,
 };
 
+void lvgl_screen_gesture_event_callback(lv_event_t *e)
+{
+  auto code = lv_event_get_code(e);
+  if (code <= LV_EVENT_HIT_TEST)
+    LOG_DBG("event %u", code);
+
+  switch (code)
+  {
+  case LV_EVENT_PRESSED:
+    lv_label_set_text(event_label, "PRESSED");
+    break;
+  case LV_EVENT_CLICKED:
+    lv_label_set_text(event_label, "CLICKED");
+    break;
+  case LV_EVENT_LONG_PRESSED:
+    lv_label_set_text(event_label, "LONG_PRESSED");
+    break;
+  case LV_EVENT_LONG_PRESSED_REPEAT:
+    lv_label_set_text(event_label, "LONG_PRESSED_REPEAT");
+    break;
+  default:
+    break;
+  }
+}
+
 void run_init(k_work *item)
 {
   dk_leds_init();
@@ -275,10 +306,33 @@ void run_init(k_work *item)
     return;
   }
 
+  lv_indev_t *touch_indev = lv_indev_get_next(NULL);
+  while (touch_indev)
+  {
+    if (lv_indev_get_type(touch_indev) == LV_INDEV_TYPE_POINTER)
+    {
+      // TODO First fix so not all presses everywhere are registered as clicks and cause vibration
+      // Clicking anywehere with this below added right now will cause a vibration, which
+      // is not what we want
+      // touch_indev->driver->feedback_cb = click_feedback;
+      break;
+    }
+    touch_indev = lv_indev_get_next(touch_indev);
+  }
+
+  lv_obj_add_event_cb(lv_scr_act(), lvgl_screen_gesture_event_callback, LV_EVENT_ALL, NULL);
+
   hello_world_label = lv_label_create(lv_scr_act());
+  event_label = lv_label_create(lv_scr_act());
   lv_label_set_text(hello_world_label, "Hello world!");
-  // lv_obj_set_style_text_font(hello_world_label, &lv_font_montserrat_20, 0);
+  lv_label_set_text(event_label, "");
+  lv_obj_set_style_text_font(hello_world_label, &lv_font_montserrat_16, 0);
+  lv_obj_set_style_text_font(event_label, &lv_font_montserrat_12, 0);
   lv_obj_align(hello_world_label, LV_ALIGN_CENTER, 0, 0);
+  lv_obj_align(event_label, LV_ALIGN_CENTER, 0, -25);
+  lv_obj_clear_flag(lv_scr_act(), LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_clear_flag(hello_world_label, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_clear_flag(event_label, LV_OBJ_FLAG_SCROLLABLE);
   lv_task_handler();
   // display_blanking_off(display_dev);
   k_work_schedule(&lvgl_work, K_NO_WAIT);

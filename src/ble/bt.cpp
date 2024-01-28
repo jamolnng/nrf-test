@@ -31,7 +31,7 @@ LOG_MODULE_REGISTER(bt, CONFIG_NRF_TEST_BLE_LOG_LEVEL);
 
 static uint32_t mtu_max_send_len = 0;
 bool _connected = false;
-// static bt_conn *current_conn;
+static bt_conn *_bt_current_conn;
 
 struct bond_check
 {
@@ -171,7 +171,7 @@ static void connected(bt_conn *conn, uint8_t err)
     LOG_ERR("Connection failed (err 0x%02x)", err);
     return;
   }
-  // current_conn = bt_conn_ref(conn);
+  _bt_current_conn = bt_conn_ref(conn);
   char addr[BT_ADDR_LE_STR_LEN];
   bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
   LOG_DBG("Connected %s", addr);
@@ -202,11 +202,11 @@ static void disconnected(bt_conn *conn, uint8_t reason)
   bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
   LOG_DBG("Disconnected: %s (reason %u)", addr, reason);
 
-  // if (current_conn)
-  // {
-  //   bt_conn_unref(current_conn);
-  //   current_conn = NULL;
-  // }
+  if (_bt_current_conn)
+  {
+    bt_conn_unref(_bt_current_conn);
+    _bt_current_conn = NULL;
+  }
 
   _connected = false;
 }
@@ -312,4 +312,9 @@ uint32_t bt::max_send_len()
 bool bt::connected()
 {
   return _connected;
+}
+
+bool bt::secure_connection()
+{
+  return bt_conn_get_security(_bt_current_conn) >= BT_SECURITY_L2;
 }
