@@ -11,6 +11,8 @@ extern "C" {
 #endif
 
 void slidervc_fn(lv_event_t * e);
+void startclicked(lv_event_t * e);
+void stopclicked(lv_event_t * e);
 
 #ifdef __cplusplus
 } /*extern "C"*/

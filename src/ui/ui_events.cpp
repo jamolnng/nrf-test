@@ -9,6 +9,9 @@
 
 #include <zephyr/logging/log.h>
 
+#include <array>
+#include <chrono>
+
 LOG_MODULE_REGISTER(nrf_test_lvgl, CONFIG_NRF_TEST_LOG_LEVEL);
 
 void slidervc_fn(lv_event_t *e)
@@ -19,5 +22,59 @@ void slidervc_fn(lv_event_t *e)
 	{
 		managers::display::Display::instance().set_brightness(value);
 		LOG_DBG("%d", value);
+	}
+}
+
+extern std::chrono::time_point<std::chrono::high_resolution_clock> stopwatch_start_time{}, stopwatch_lap_time{};
+extern bool stopwatch_started = false;
+void startclicked(lv_event_t *e)
+{
+	if (stopwatch_started)
+	{
+		stopwatch_started = false;
+		lv_label_set_text(ui_startlabel, "Start");
+		lv_obj_set_style_bg_color(ui_stop, lv_color_hex(0x7F7F7F), LV_PART_MAIN | LV_STATE_DEFAULT);
+		lv_obj_set_style_bg_color(ui_start, lv_palette_main(LV_PALETTE_BLUE), LV_PART_MAIN | LV_STATE_DEFAULT);
+
+		auto final_time = std::chrono::high_resolution_clock::now() - stopwatch_start_time;
+		auto minutes = std::chrono::duration_cast<std::chrono::minutes>(final_time);
+		auto seconds = std::chrono::duration_cast<std::chrono::seconds>(final_time - minutes);
+		auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(final_time - minutes - seconds);
+		std::array<char, 50> time_buf{0};
+		snprintf(time_buf.data(), time_buf.size(), "%02lld:%02lld.%03lld",
+						 minutes.count(),
+						 seconds.count(),
+						 milliseconds.count());
+		lv_label_set_text(ui_time, time_buf.data());
+	}
+	else
+	{
+		stopwatch_started = true;
+		stopwatch_start_time = std::chrono::high_resolution_clock::now();
+		stopwatch_lap_time = stopwatch_start_time;
+		lv_label_set_text(ui_startlabel, "Stop");
+		lv_obj_set_style_bg_color(ui_stop, lv_palette_main(LV_PALETTE_BLUE), LV_PART_MAIN | LV_STATE_DEFAULT);
+		lv_obj_set_style_bg_color(ui_start, lv_color_hex(0xCF0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+		lv_label_set_text(ui_lap, "00:00.000");
+	}
+}
+
+// actually lapped
+void stopclicked(lv_event_t *e)
+{
+	if (stopwatch_started)
+	{
+		auto now = std::chrono::high_resolution_clock::now();
+		auto final_time = now - stopwatch_lap_time;
+		stopwatch_lap_time = now;
+		auto minutes = std::chrono::duration_cast<std::chrono::minutes>(final_time);
+		auto seconds = std::chrono::duration_cast<std::chrono::seconds>(final_time - minutes);
+		auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(final_time - minutes - seconds);
+		std::array<char, 50> time_buf{0};
+		snprintf(time_buf.data(), time_buf.size(), "%02lld:%02lld.%03lld",
+						 minutes.count(),
+						 seconds.count(),
+						 milliseconds.count());
+		lv_label_set_text(ui_lap, time_buf.data());
 	}
 }

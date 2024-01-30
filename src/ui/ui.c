@@ -9,15 +9,38 @@
 ///////////////////// VARIABLES ////////////////////
 
 
-// SCREEN: ui_simple_watchface
-void ui_simple_watchface_screen_init(void);
-lv_obj_t * ui_simple_watchface;
+// SCREEN: ui_watchface
+void ui_watchface_screen_init(void);
+void ui_event_watchface(lv_event_t * e);
+lv_obj_t * ui_watchface;
 lv_obj_t * ui_daymonth;
 lv_obj_t * ui_timehhmmss;
 lv_obj_t * ui_year;
 lv_obj_t * ui_bluetooth;
 void ui_event_brightness_slider(lv_event_t * e);
 lv_obj_t * ui_brightness_slider;
+
+
+// SCREEN: ui_settings
+void ui_settings_screen_init(void);
+void ui_event_settings(lv_event_t * e);
+lv_obj_t * ui_settings;
+lv_obj_t * ui_Colorwheel1;
+
+
+// SCREEN: ui_stopwatch
+void ui_stopwatch_screen_init(void);
+void ui_event_stopwatch(lv_event_t * e);
+lv_obj_t * ui_stopwatch;
+lv_obj_t * ui_time;
+void ui_event_start(lv_event_t * e);
+lv_obj_t * ui_start;
+void ui_event_stop(lv_event_t * e);
+lv_obj_t * ui_stop;
+lv_obj_t * ui_lap;
+lv_obj_t * ui_startlabel;
+lv_obj_t * ui_stoplabel;
+void ui_event____initial_actions0(lv_event_t * e);
 lv_obj_t * ui____initial_actions0;
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////
@@ -31,12 +54,67 @@ lv_obj_t * ui____initial_actions0;
 ///////////////////// ANIMATIONS ////////////////////
 
 ///////////////////// FUNCTIONS ////////////////////
+void ui_event_watchface(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_RIGHT) {
+        lv_indev_wait_release(lv_indev_get_act());
+        _ui_screen_change(&ui_settings, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 250, 0, &ui_settings_screen_init);
+    }
+    if(event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_LEFT) {
+        lv_indev_wait_release(lv_indev_get_act());
+        _ui_screen_change(&ui_stopwatch, LV_SCR_LOAD_ANIM_MOVE_LEFT, 250, 0, &ui_stopwatch_screen_init);
+    }
+}
 void ui_event_brightness_slider(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_RELEASED) {
         slidervc_fn(e);
+    }
+}
+void ui_event_settings(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_LEFT) {
+        lv_indev_wait_release(lv_indev_get_act());
+        _ui_screen_change(&ui_watchface, LV_SCR_LOAD_ANIM_MOVE_LEFT, 250, 0, &ui_watchface_screen_init);
+    }
+}
+void ui_event_stopwatch(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_RIGHT) {
+        lv_indev_wait_release(lv_indev_get_act());
+        _ui_screen_change(&ui_watchface, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 250, 0, &ui_watchface_screen_init);
+    }
+}
+void ui_event_start(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_CLICKED) {
+        startclicked(e);
+    }
+}
+void ui_event_stop(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_CLICKED) {
+        stopclicked(e);
+    }
+}
+void ui_event____initial_actions0(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_SCREEN_LOAD_START) {
+        _ui_flag_modify(ui_bluetooth, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
     }
 }
 
@@ -48,7 +126,12 @@ void ui_init(void)
     lv_theme_t * theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED),
                                                true, LV_FONT_DEFAULT);
     lv_disp_set_theme(dispp, theme);
-    ui_simple_watchface_screen_init();
+    ui_watchface_screen_init();
+    ui_settings_screen_init();
+    ui_stopwatch_screen_init();
     ui____initial_actions0 = lv_obj_create(NULL);
-    lv_disp_load_scr(ui_simple_watchface);
+    lv_obj_add_event_cb(ui____initial_actions0, ui_event____initial_actions0, LV_EVENT_ALL, NULL);
+
+    lv_disp_load_scr(ui____initial_actions0);
+    lv_disp_load_scr(ui_watchface);
 }

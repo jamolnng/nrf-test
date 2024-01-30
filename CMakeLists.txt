@@ -29,12 +29,17 @@ target_sources(app PRIVATE
   src/drivers/display/gc9a01.cpp
   src/drivers/input/cst816s.cpp
 
-  src/ui/ui_simple_watchface.c
+  src/ui/ui_watchface.c
+  src/ui/ui_settings.c
+  src/ui/ui_stopwatch.c
   src/ui/ui.c
   src/ui/ui_comp_hook.c
   src/ui/ui_helpers.c
   src/ui/ui_events.cpp
-
+  src/ui/ui_font_MesloGLNerdFrontMono38.c
+  src/ui/ui_font_MesloGLNerdFrontMono14.c
+  src/ui/ui_font_MesloGLNerdFrontMono28.c
+  
   src/managers/bluetooth.cpp
   src/managers/devkit.cpp
   src/managers/display.cpp

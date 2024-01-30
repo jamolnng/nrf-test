@@ -11,7 +11,7 @@
 
 #include <algorithm>
 #include <array>
-#include <ctime>
+#include <chrono>
 
 #include <lvgl.h>
 
@@ -129,6 +129,9 @@ void backlight_timer_expire(k_timer *timer)
   pwm_set_pulse_dt(backlight, 0);
 }
 
+extern std::chrono::time_point<std::chrono::high_resolution_clock> stopwatch_start_time;
+extern bool stopwatch_started;
+
 void Display::render(k_work *work)
 {
   std::array<char, 25> time_buf{0};
@@ -143,6 +146,21 @@ void Display::render(k_work *work)
   std::strftime(time_buf.data(), time_buf.size(), "%Y", std::localtime(&now));
   lv_label_set_text(ui_year, time_buf.data());
 
+  if (stopwatch_started)
+  {
+    auto final_time = std::chrono::high_resolution_clock::now() - stopwatch_start_time;
+    auto minutes = std::chrono::duration_cast<std::chrono::minutes>(final_time);
+    auto seconds = std::chrono::duration_cast<std::chrono::seconds>(final_time - minutes);
+    auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(final_time - minutes - seconds);
+    std::array<char, 50> time_buf{0};
+    snprintf(time_buf.data(), time_buf.size(), "%02lld:%02lld.%03lld",
+             minutes.count(),
+             seconds.count(),
+             milliseconds.count());
+    lv_label_set_text(ui_time, time_buf.data());
+  }
+
   k_work_delayable *_render_work = CONTAINER_OF(work, k_work_delayable, work);
-  k_work_schedule(_render_work, K_MSEC(lv_task_handler()));
+  lv_task_handler();
+  k_work_schedule(_render_work, K_NO_WAIT);
 }

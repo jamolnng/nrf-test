@@ -24,19 +24,41 @@ extern "C" {
 
 #include "ui_helpers.h"
 #include "ui_events.h"
-// SCREEN: ui_simple_watchface
-void ui_simple_watchface_screen_init(void);
-extern lv_obj_t * ui_simple_watchface;
+// SCREEN: ui_watchface
+void ui_watchface_screen_init(void);
+void ui_event_watchface(lv_event_t * e);
+extern lv_obj_t * ui_watchface;
 extern lv_obj_t * ui_daymonth;
 extern lv_obj_t * ui_timehhmmss;
 extern lv_obj_t * ui_year;
 extern lv_obj_t * ui_bluetooth;
 void ui_event_brightness_slider(lv_event_t * e);
 extern lv_obj_t * ui_brightness_slider;
+// SCREEN: ui_settings
+void ui_settings_screen_init(void);
+void ui_event_settings(lv_event_t * e);
+extern lv_obj_t * ui_settings;
+extern lv_obj_t * ui_Colorwheel1;
+// SCREEN: ui_stopwatch
+void ui_stopwatch_screen_init(void);
+void ui_event_stopwatch(lv_event_t * e);
+extern lv_obj_t * ui_stopwatch;
+extern lv_obj_t * ui_time;
+void ui_event_start(lv_event_t * e);
+extern lv_obj_t * ui_start;
+void ui_event_stop(lv_event_t * e);
+extern lv_obj_t * ui_stop;
+extern lv_obj_t * ui_lap;
+extern lv_obj_t * ui_startlabel;
+extern lv_obj_t * ui_stoplabel;
+void ui_event____initial_actions0(lv_event_t * e);
 extern lv_obj_t * ui____initial_actions0;
 
 
 
+LV_FONT_DECLARE(ui_font_MesloGLNerdFrontMono38);
+LV_FONT_DECLARE(ui_font_MesloGLNerdFrontMono14);
+LV_FONT_DECLARE(ui_font_MesloGLNerdFrontMono28);
 
 void ui_init(void);
 
