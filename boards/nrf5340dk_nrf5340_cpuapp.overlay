@@ -69,7 +69,7 @@
     compatible = "pwm-leds";
     status = "okay";
     display_bkl: pwm_led_0 {
-      pwms = <&pwm0 0 PWM_USEC(250) PWM_POLARITY_INVERTED>;
+      pwms = <&pwm0 0 PWM_USEC(15) PWM_POLARITY_INVERTED>;
     };
   };
 
@@ -138,4 +138,12 @@
 
 &gpio_fwd {
   status = "disabled";
+};
+
+&timer0 {
+  status = "okay";
+};
+
+&timer1 {
+  status = "okay";
 };

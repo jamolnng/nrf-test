@@ -7,6 +7,7 @@
 #include <zephyr/input/input.h>
 
 #include "managers/bluetooth.hpp"
+#include "managers/display.hpp"
 
 #include <zephyr/bluetooth/conn.h>
 #include <zephyr/sys/reboot.h>
@@ -46,6 +47,13 @@ void on_input_subsys_callback(struct input_event *evt)
       bt::auth::set_pairable(!bt::auth::pairable());
       break;
     case INPUT_KEY_1: // button 2
+      static int b = 0;
+      managers::display::Display::instance().set_brightness(b);
+      b++;
+      if (b == 32)
+      {
+        b = 0;
+      }
       break;
     case INPUT_KEY_2: // button 3
       k_work_schedule(&unregister_work, K_NO_WAIT);

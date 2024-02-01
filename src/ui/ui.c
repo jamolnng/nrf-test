@@ -71,7 +71,7 @@ void ui_event_brightness_slider(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
-    if(event_code == LV_EVENT_RELEASED) {
+    if(event_code == LV_EVENT_VALUE_CHANGED) {
         slidervc_fn(e);
     }
 }
