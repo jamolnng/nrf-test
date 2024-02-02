@@ -74,6 +74,7 @@ Display::Display(const device *display, const device *touch, const device *count
 
   _brightness_alarm_start.ticks = counter_us_to_ticks(_counter, 0);
   _brightness_alarm_run.ticks = counter_us_to_ticks(_counter, 750);
+  k_sem_take(nullptr, K_NO_WAIT);
 }
 
 void Display::init()
@@ -145,7 +146,7 @@ void Display::sleep()
 
 void Display::set_brightness(uint8_t brightness)
 {
-  _next_brightness = brightness;
+  _brightness = std::min(brightness, uint8_t(32));
   k_work_cancel_delayable_sync(&_brightness_work, &_brightness_cancel_sync);
   k_work_schedule(&_brightness_work, K_MSEC(20));
 }
@@ -154,24 +155,15 @@ void Display::do_set_brightness(k_work *work)
 {
   auto *display = CONTAINER_OF(work, Display, _brightness_work);
 
-  uint8_t brightness = std::min(display->_next_brightness, uint8_t(32));
-  // // auto npulses = uint8_t(display->_brightness - brightness) % 32;
-  auto npulses = 32 - brightness;
-  display->_brightness = brightness;
+  auto npulses = 32 - display->_brightness;
 
-  // npulses = 3;
-
-  // auto npulses = display->_next_brightness;
-  // LOG_DBG("br: %d", npulses);
-
-  // if (npulses > 0)
-  {
-    display->_brightness_alarm_stop.ticks = display->_brightness_alarm_run.ticks + counter_us_to_ticks(display->_counter, display->_backlight.period * (npulses + 1) / NSEC_PER_USEC);
-    counter_set_channel_alarm(display->_counter, 0, &display->_brightness_alarm_start);
-    counter_set_channel_alarm(display->_counter, 1, &display->_brightness_alarm_run);
-    counter_set_channel_alarm(display->_counter, 2, &display->_brightness_alarm_stop);
-    counter_start(display->_counter);
-  }
+  display->_brightness_alarm_stop.ticks =
+      display->_brightness_alarm_run.ticks +
+      counter_us_to_ticks(display->_counter, display->_backlight.period * (npulses + 1) / NSEC_PER_USEC);
+  counter_set_channel_alarm(display->_counter, 0, &display->_brightness_alarm_start);
+  counter_set_channel_alarm(display->_counter, 1, &display->_brightness_alarm_run);
+  counter_set_channel_alarm(display->_counter, 2, &display->_brightness_alarm_stop);
+  counter_start(display->_counter);
 }
 
 uint8_t Display::get_brightness()

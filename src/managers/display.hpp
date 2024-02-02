@@ -39,7 +39,7 @@ namespace managers::display
     const device *_touch;
     const device *_counter;
     const pwm_dt_spec _backlight;
-    uint8_t _brightness{32}, _last_brightness{32}, _next_brightness{32};
+    uint8_t _brightness{32}, _last_brightness{32};
     State _state{Sleep};
     counter_alarm_cfg _brightness_alarm_start, _brightness_alarm_run, _brightness_alarm_stop;
 
